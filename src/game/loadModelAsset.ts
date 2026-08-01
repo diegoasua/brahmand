@@ -36,7 +36,10 @@ export async function loadModelAsset(
 
   const normalizedBounds = new Box3().setFromObject(model);
   const center = normalizedBounds.getCenter(new Vector3());
-  model.position.sub(center);
+  model.position.x -= center.x;
+  model.position.z -= center.z;
+  model.position.y -=
+    definition.anchor === 'base' ? normalizedBounds.min.y : center.y;
 
   if (definition.material) {
     model.traverse((object) => {

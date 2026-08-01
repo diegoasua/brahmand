@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CuratedDialogueProvider } from '../server/dialogue/CuratedDialogueProvider';
+import { celestialBodies } from '../src/content/celestial-bodies';
 
 describe('CuratedDialogueProvider', () => {
   it('returns dialogue grounded in the target allowlist', async () => {
@@ -20,4 +21,16 @@ describe('CuratedDialogueProvider', () => {
       status: 404,
     });
   });
+
+  it.each(celestialBodies)(
+    'supports science-grounded interaction with $name',
+    async (body) => {
+      const provider = new CuratedDialogueProvider();
+      const response = await provider.generate({ targetId: body.id });
+
+      expect(response.speakerName).toBe('AURA');
+      expect(response.grounding).not.toHaveLength(0);
+      expect(response.grounding[0]?.knowledgeId).toBe(body.npc.knowledgeIds[0]);
+    },
+  );
 });

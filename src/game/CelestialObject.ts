@@ -29,6 +29,9 @@ export class CelestialObject {
       new SphereGeometry(definition.displayRadius, 40, 24),
       material,
     );
+    // Authored models should never briefly appear as generic spheres while their
+    // GLBs load. The sphere remains available if the model request fails.
+    this.#fallback.visible = !definition.modelAssetId;
     this.object.position.set(...definition.displayPosition);
     this.object.name = definition.name;
     this.object.add(this.#fallback);
@@ -65,6 +68,7 @@ export class CelestialObject {
       this.#fallback.visible = false;
       return true;
     } catch (error) {
+      this.#fallback.visible = true;
       console.warn(
         `Unable to load ${this.definition.name} model; using sphere fallback.`,
         error,

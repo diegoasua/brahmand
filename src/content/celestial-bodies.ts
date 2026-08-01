@@ -167,6 +167,7 @@ export const celestialBodies = [
     color: 0xffc85c,
     rotationRadiansPerSecond: 0.004,
     interactionRange: 115,
+    modelAssetId: 'sun',
     npc: {
       knowledgeIds: ['sun-system-mass'],
     },

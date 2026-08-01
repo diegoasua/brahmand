@@ -5,8 +5,8 @@
 Browser-ready files live under `public/assets/` and are served from `/assets/` without the `public` prefix.
 
 ```text
-public/assets/models/asteria/asteria.glb
-                         -> /assets/models/asteria/asteria.glb
+public/assets/assets_glb/ch0_prop_ship.glb
+                         -> /assets/assets_glb/ch0_prop_ship.glb
 ```
 
 GLB is the preferred runtime model format. Embed textures when practical so a model arrives as one self-contained file. Runtime code normalizes each asset to an explicitly configured artistic size; the model's source units are never treated as astronomical or educational measurements.
@@ -15,8 +15,8 @@ The project convention is:
 
 - Y is up.
 - A forward-facing vehicle points toward -Z.
-- Model origins are normalized to the center of their complete bounds at load time.
-- Per-asset size and orientation corrections live in `src/content/assets.ts`, not as unexplained transforms in scene code.
+- Vehicle and floating-model origins are normalized to the center of their complete bounds. Grounded props can opt into a bottom-center anchor.
+- Per-asset size and orientation corrections live in content manifests, not as unexplained transforms in scene code.
 
 ## Editable sources
 
@@ -48,18 +48,25 @@ NASA-hosted does not automatically mean unrestricted in every case. Record the e
 
 ## Current Asteria model
 
-- File: `public/assets/models/asteria/asteria.glb`
-- GLTF version: 2.0
-- Geometry: one mesh, 8,726 uploaded vertices
-- Texture: one embedded 1024×1024 PNG base-color texture
-- Animations: none
-- Raw bounds: approximately 0.42 × 0.39 × 1.00 source units
-- Runtime target size: 5.5 artistic game units
+The current player vessel is `public/assets/assets_glb/ch0_prop_ship.glb`: one textured GLB mesh with 6,647 uploaded vertices, no animation, raw bounds of approximately 0.55 × 0.41 × 1.00 source units, and a runtime target size of 7 artistic game units. The embedded texture is preserved. Runtime configuration supplies restrained PBR values for readable space lighting, and a procedural ship remains available if loading fails.
 
-The embedded texture is preserved. The export omits metallic and roughness factors, which invokes glTF's fully metallic default and made the hull nearly black without an environment map. Runtime configuration supplies restrained PBR values for readable space lighting. A procedural ship remains available if loading fails.
+The older `public/assets/models/asteria/asteria.glb` export remains in the repository as source history but is no longer selected at runtime.
+
+## Story-world props
+
+All 50 delivered Chapter 1–6 GLBs are mapped in `src/content/world-props.ts`. The filename prefixes drive their initial role and placement:
+
+- Chapter 1 modular and material assets form a fictional exposed engineering corridor in near-Earth space.
+- Chapter 2 plants, samples, and laboratory equipment form a fictional orbital ecosystem test array near Mars.
+- Chapter 3 artifacts form a remote archive installation beyond Saturn.
+- Chapter 4 characters appear as temporary holographic story-presence models at related encounter sites.
+- Chapter 5 stations and satellites occupy near-Earth space; asteroids and comets occupy progressively more distant regions.
+- Chapter 6 navigation consoles attach to the engineering corridor.
+
+Nearby props load before they are readily visible. Distant clusters stream when the ship comes within 700 artistic units; unlike celestial fallbacks, unloaded props have no placeholder geometry, so they never appear as generic spheres.
 
 ## Solar System models
 
-The current delivery includes Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto. Pluto is represented and labeled as a dwarf planet. The Sun and Moon retain lightweight procedural proxies until dedicated assets arrive.
+The current delivery includes the Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto. Pluto is represented and labeled as a dwarf planet. The Moon retains a lightweight procedural proxy until a dedicated asset arrives.
 
-High-resolution planet textures can expand substantially in GPU memory—Earth and Jupiter each decode to roughly 67 MB per large texture. Detailed GLBs therefore load progressively when Asteria approaches a world. Sphere proxies preserve navigation and interaction while a model is unavailable or still loading.
+High-resolution celestial textures can expand substantially in GPU memory—Earth and Jupiter each decode to roughly 67 MB per large texture. Authored GLBs begin loading at scene startup. Their sphere proxies remain hidden during loading and appear only if a model fails; the Moon retains its intentional procedural representation.

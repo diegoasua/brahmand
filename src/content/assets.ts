@@ -4,6 +4,8 @@ export interface ModelAssetDefinition {
   targetSize: number;
   /** Runtime forward is -Z. Rotations adapt authored orientation to that convention. */
   rotation: readonly [number, number, number];
+  /** Center vehicles and floating objects; place grounded props on their lowest point. */
+  anchor?: 'center' | 'base';
   /** Correct incomplete or unsuitable authored PBR defaults without changing textures. */
   material?: {
     metalness: number;
@@ -24,18 +26,17 @@ const planetMaterial = {
 
 export const modelAssets = {
   asteria: {
-    url: '/assets/models/asteria/asteria.glb',
-    targetSize: 5.5,
-    rotation: [0, 0, 0],
-    // The exported GLB omits these factors, so glTF defaults metalness to 1.
-    // With no environment map that makes the textured hull appear almost black.
+    url: '/assets/assets_glb/ch0_prop_ship.glb',
+    targetSize: 7,
+    rotation: [0, 180, 0],
+    // Generated GLBs omit useful PBR factors and otherwise render too dark in space.
     material: {
-      metalness: 0.18,
-      roughness: 0.62,
+      metalness: 0.14,
+      roughness: 0.6,
     },
     enginePlumes: [
-      { position: [-0.42, -0.12, 2.62], radius: 0.34, length: 1.9 },
-      { position: [0.42, -0.12, 2.62], radius: 0.34, length: 1.9 },
+      { position: [-1.05, -0.18, 3.28], radius: 0.4, length: 2.25 },
+      { position: [1.05, -0.18, 3.28], radius: 0.4, length: 2.25 },
     ],
   },
   mercury: {
@@ -92,6 +93,11 @@ export const modelAssets = {
     targetSize: 8,
     rotation: [0, 0, 0],
     material: planetMaterial,
+  },
+  sun: {
+    url: '/assets/assets_glb/planets/sun.glb',
+    targetSize: 150,
+    rotation: [0, 0, 0],
   },
 } as const satisfies Record<string, ModelAssetDefinition>;
 

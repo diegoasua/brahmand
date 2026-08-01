@@ -13,6 +13,7 @@ export class Game {
   readonly #quests = new QuestDirector(commissioningQuests);
   readonly #dialogue: DialogueController;
   readonly #clock = new Clock();
+  readonly #introducedContactIds = new Set<string>();
   #animationFrame = 0;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -41,8 +42,8 @@ export class Game {
     void this.#world.loadAssets().then((loaded) => {
       this.#hud.setNotice(
         loaded
-          ? 'Asteria model loaded. Use W/S to begin the systems check.'
-          : 'Asteria model unavailable; procedural flight model active.',
+          ? 'Asteria, planetary models, and nearby encounters loaded. Use W/S to begin the systems check.'
+          : 'Some models are unavailable; fallback visuals are active.',
       );
     });
     this.#animationFrame = requestAnimationFrame(this.#tick);
@@ -64,7 +65,13 @@ export class Game {
     this.#hud.updateTelemetry(update.speed, contact);
     this.#advanceVisitQuest();
 
-    if (update.interactionRequested && contact?.inRange) {
+    if (
+      update.enteredContactId &&
+      !this.#introducedContactIds.has(update.enteredContactId)
+    ) {
+      this.#introducedContactIds.add(update.enteredContactId);
+      void this.#openChannel(update.enteredContactId);
+    } else if (update.interactionRequested && contact?.inRange) {
       void this.#openChannel(contact.id);
     }
 
@@ -82,12 +89,13 @@ export class Game {
     ) {
       this.#hud.setNotice('Observation range reached. AURA is analyzing the contact…');
       this.#hud.updateQuest(this.#quests.progress);
-      void this.#openChannel(current.objective.targetId);
     }
   }
 
   async #openChannel(targetId: string): Promise<void> {
-    const questId = this.#quests.progress.current?.id;
+    const currentQuest = this.#quests.progress.current;
+    const questId =
+      currentQuest?.objective.targetId === targetId ? currentQuest.id : undefined;
     const connected = await this.#dialogue.talk(targetId, questId);
 
     if (
