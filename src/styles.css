@@ -1,0 +1,232 @@
+:root {
+  color: #e6f7ff;
+  background: #01040b;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  min-width: 320px;
+}
+
+#game-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  text-shadow: 0 1px 12px #000;
+}
+
+.hud__brand {
+  position: absolute;
+  top: clamp(1rem, 3vw, 2.5rem);
+  left: clamp(1rem, 3vw, 2.5rem);
+}
+
+.hud__brand h1 {
+  margin: 0.12rem 0 0;
+  font-size: clamp(1.3rem, 3vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+}
+
+.hud__eyebrow,
+.dialogue__speaker,
+.notice,
+.controls,
+.hud__telemetry {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.hud__eyebrow {
+  margin: 0;
+  color: #63dcf0;
+  font-size: 0.67rem;
+}
+
+.hud__telemetry {
+  position: absolute;
+  top: clamp(1rem, 3vw, 2.5rem);
+  right: clamp(1rem, 3vw, 2.5rem);
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.4rem 1.5rem;
+  font-size: 0.67rem;
+  color: #87a5b5;
+  text-align: right;
+}
+
+.hud__telemetry strong {
+  display: inline-block;
+  min-width: 5.5rem;
+  color: #e6f7ff;
+  font-weight: 500;
+}
+
+.quest-card,
+.dialogue {
+  border: 1px solid rgb(99 220 240 / 28%);
+  background: linear-gradient(135deg, rgb(5 18 30 / 88%), rgb(4 10 18 / 60%));
+  box-shadow: 0 1rem 4rem rgb(0 0 0 / 24%);
+  backdrop-filter: blur(12px);
+}
+
+.quest-card {
+  position: absolute;
+  top: 50%;
+  left: clamp(1rem, 3vw, 2.5rem);
+  width: min(20rem, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  transform: translateY(-50%);
+}
+
+.quest-card h2 {
+  margin: 0.42rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.quest-card p:last-child {
+  margin: 0;
+  color: #a8bfca;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.interaction-prompt {
+  position: absolute;
+  top: 64%;
+  left: 50%;
+  padding: 0.55rem 0.7rem;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgb(99 220 240 / 35%);
+  background: rgb(2 10 18 / 72%);
+  color: #aaf5ff;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 0.72rem;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.55rem;
+  margin-right: 0.45rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid #63dcf0;
+  color: #fff;
+  font: inherit;
+  text-align: center;
+}
+
+.dialogue {
+  position: absolute;
+  bottom: clamp(4.5rem, 9vh, 7rem);
+  left: 50%;
+  width: min(43rem, calc(100vw - 2rem));
+  padding: 1rem 1.2rem;
+  transform: translateX(-50%);
+}
+
+.dialogue__speaker {
+  margin: 0 0 0.55rem;
+  color: #63dcf0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.dialogue > p:not(.dialogue__speaker) {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.dialogue__source {
+  display: inline-block;
+  pointer-events: auto;
+  margin-top: 0.75rem;
+  color: #8ab9c6;
+  font-size: 0.7rem;
+}
+
+.dialogue__source[hidden] {
+  display: none;
+}
+
+.notice {
+  position: absolute;
+  bottom: clamp(1rem, 3vw, 2.5rem);
+  left: 50%;
+  width: min(44rem, calc(100vw - 2rem));
+  margin: 0;
+  transform: translateX(-50%);
+  color: #a9c2cc;
+  font-size: 0.67rem;
+  text-align: center;
+}
+
+.controls {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3vw, 2.5rem);
+  pointer-events: auto;
+  max-width: min(24rem, calc(100vw - 2rem));
+  color: #819ca8;
+  font-size: 0.64rem;
+  text-align: right;
+}
+
+.controls summary {
+  cursor: pointer;
+}
+
+.controls p {
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .hud__telemetry {
+    top: auto;
+    right: 1rem;
+    bottom: 4.2rem;
+  }
+
+  .quest-card {
+    top: 6rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    transform: none;
+  }
+
+  .controls {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}

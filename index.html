@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Brahmand — a science-grounded space exploration story."
+    />
+    <title>Brahmand — Commissioning Sandbox</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game-canvas" aria-label="Brahmand 3D space view"></canvas>
+
+      <section class="hud" aria-label="Flight information">
+        <div class="hud__brand">
+          <p class="hud__eyebrow">COMMISSIONING SANDBOX</p>
+          <h1>BRAHMAND</h1>
+        </div>
+
+        <div class="hud__telemetry" aria-live="polite">
+          <span>VELOCITY <strong id="speed">0.0</strong></span>
+          <span>CONTACT <strong id="target">NONE</strong></span>
+          <span>RANGE <strong id="distance">—</strong></span>
+        </div>
+
+        <aside class="quest-card">
+          <p class="hud__eyebrow">SYSTEMS CHECK</p>
+          <h2 id="quest-title">Initializing navigation</h2>
+          <p id="quest-summary">Loading commissioning sequence…</p>
+        </aside>
+
+        <div id="interaction-prompt" class="interaction-prompt" hidden>
+          <kbd>F</kbd> OPEN CHANNEL
+        </div>
+
+        <article id="dialogue" class="dialogue" aria-live="polite" hidden>
+          <p id="speaker" class="dialogue__speaker"></p>
+          <p id="dialogue-text"></p>
+          <a
+            id="science-source"
+            class="dialogue__source"
+            href="#"
+            target="_blank"
+            rel="noreferrer"
+            hidden
+          ></a>
+        </article>
+
+        <p id="notice" class="notice" aria-live="polite">
+          Flight systems online. Use W/S to begin the systems check.
+        </p>
+
+        <details class="controls">
+          <summary>Flight controls</summary>
+          <p>W/S thrust · A/D yaw · arrows pitch · Q/E roll · Shift boost · F talk</p>
+        </details>
+      </section>
+    </main>
+
+    <noscript>Brahmand requires JavaScript and WebGL.</noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

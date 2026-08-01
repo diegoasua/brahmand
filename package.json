@@ -1,0 +1,43 @@
+{
+  "name": "brahmand",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A science-grounded space exploration story built with Three.js.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n game,api -c cyan,magenta \"vite\" \"npm:dev:api\"",
+    "dev:game": "vite",
+    "dev:api": "node --env-file-if-exists=.env --import tsx --watch server/index.ts",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "start:api": "node --env-file-if-exists=.env --import tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run lint && npm test"
+  },
+  "dependencies": {
+    "@inworld/tts": "^1.1.1",
+    "express": "^5.2.1",
+    "three": "^0.185.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@types/express": "latest",
+    "@types/node": "latest",
+    "@types/three": "latest",
+    "concurrently": "latest",
+    "eslint": "^10.0.0",
+    "globals": "latest",
+    "tsx": "latest",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10"
+  }
+}
