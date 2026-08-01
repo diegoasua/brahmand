@@ -3,7 +3,11 @@ import { serverConfig } from './config';
 import { InworldSpeechService } from './speech/InworldSpeechService';
 
 const app = createApp({
-  dialogue: createDefaultDialogueProvider(),
+  dialogue: createDefaultDialogueProvider({
+    apiKey: serverConfig.inworldApiKey,
+    model: serverConfig.inworldLlmModel,
+    voiceId: serverConfig.inworldVoice,
+  }),
   speech: new InworldSpeechService({
     apiKey: serverConfig.inworldApiKey,
     defaultVoice: serverConfig.inworldVoice,

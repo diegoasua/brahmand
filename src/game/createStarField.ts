@@ -14,12 +14,12 @@ function seededRandom(seed: number): () => number {
   };
 }
 
-export function createStarField(count = 4_500): Points {
+export function createStarField(count = 6_000): Points {
   const random = seededRandom(0xb4a4a4d);
   const positions = new Float32Array(count * 3);
 
   for (let index = 0; index < count; index += 1) {
-    const radius = 650 + random() * 2_700;
+    const radius = 2_500 + random() * 6_500;
     const azimuth = random() * Math.PI * 2;
     const cosine = random() * 2 - 1;
     const sine = Math.sqrt(1 - cosine * cosine);

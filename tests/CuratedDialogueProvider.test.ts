@@ -6,7 +6,7 @@ describe('CuratedDialogueProvider', () => {
     const provider = new CuratedDialogueProvider();
     const response = await provider.generate({ targetId: 'earth' });
 
-    expect(response.speakerName).toBe('Earth');
+    expect(response.speakerName).toBe('AURA');
     expect(response.grounding).toEqual([
       expect.objectContaining({ knowledgeId: 'earth-atmosphere-composition' }),
     ]);

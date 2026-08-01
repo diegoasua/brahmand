@@ -10,7 +10,7 @@ export class ChaseCamera {
   readonly #lookAt = new Vector3();
 
   constructor(aspect: number) {
-    this.camera = new PerspectiveCamera(64, aspect, 0.1, 6000);
+    this.camera = new PerspectiveCamera(64, aspect, 0.1, 12_000);
   }
 
   snapTo(ship: PlayerShip): void {

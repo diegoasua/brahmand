@@ -4,6 +4,7 @@ import express, {
 } from 'express';
 import { CuratedDialogueProvider } from './dialogue/CuratedDialogueProvider';
 import type { DialogueProvider } from './dialogue/DialogueProvider';
+import { InworldRouterDialogueProvider } from './dialogue/InworldRouterDialogueProvider';
 import { HttpError } from './http-errors';
 import { dialogueRequestSchema, speechRequestSchema } from './schemas';
 import type { SpeechService } from './speech/InworldSpeechService';
@@ -68,6 +69,16 @@ export function createApp(services: AppServices) {
   return app;
 }
 
-export function createDefaultDialogueProvider(): DialogueProvider {
-  return new CuratedDialogueProvider();
+export function createDefaultDialogueProvider(options: {
+  apiKey: string | undefined;
+  model: string;
+  voiceId: string;
+}): DialogueProvider {
+  return options.apiKey
+    ? new InworldRouterDialogueProvider({
+        apiKey: options.apiKey,
+        model: options.model,
+        voiceId: options.voiceId,
+      })
+    : new CuratedDialogueProvider();
 }

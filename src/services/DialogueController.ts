@@ -8,13 +8,16 @@ export interface DialogueCallbacks {
 
 export class DialogueController {
   #busy = false;
-  #audio: HTMLAudioElement | undefined;
-  #audioUrl: string | undefined;
+  #audioContext: AudioContext | undefined;
+  #audioSource: AudioBufferSourceNode | undefined;
 
   constructor(
     private readonly api: GameApiClient,
     private readonly callbacks: DialogueCallbacks,
-  ) {}
+  ) {
+    window.addEventListener('keydown', this.#unlockAudio, { once: true });
+    window.addEventListener('pointerdown', this.#unlockAudio, { once: true });
+  }
 
   async talk(targetId: string, questId?: string): Promise<boolean> {
     if (this.#busy) {
@@ -40,10 +43,10 @@ export class DialogueController {
   }
 
   dispose(): void {
-    this.#audio?.pause();
-    if (this.#audioUrl) {
-      URL.revokeObjectURL(this.#audioUrl);
-    }
+    window.removeEventListener('keydown', this.#unlockAudio);
+    window.removeEventListener('pointerdown', this.#unlockAudio);
+    this.#audioSource?.stop();
+    void this.#audioContext?.close();
   }
 
   async #speak(dialogue: DialogueResponse): Promise<void> {
@@ -53,14 +56,17 @@ export class DialogueController {
         voiceId: dialogue.voiceId,
       });
 
-      this.#audio?.pause();
-      if (this.#audioUrl) {
-        URL.revokeObjectURL(this.#audioUrl);
-      }
+      const context = this.#audioContext ?? new AudioContext();
+      this.#audioContext = context;
+      await context.resume();
+      const buffer = await context.decodeAudioData(await blob.arrayBuffer());
 
-      this.#audioUrl = URL.createObjectURL(blob);
-      this.#audio = new Audio(this.#audioUrl);
-      await this.#audio.play();
+      this.#audioSource?.stop();
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.start();
+      this.#audioSource = source;
       this.callbacks.onNotice('Inworld voice connected.');
     } catch {
       this.callbacks.onNotice(
@@ -68,4 +74,11 @@ export class DialogueController {
       );
     }
   }
+
+  readonly #unlockAudio = (): void => {
+    this.#audioContext ??= new AudioContext();
+    void this.#audioContext.resume();
+    window.removeEventListener('keydown', this.#unlockAudio);
+    window.removeEventListener('pointerdown', this.#unlockAudio);
+  };
 }

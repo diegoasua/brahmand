@@ -10,8 +10,8 @@ export const commissioningQuests = [
   },
   {
     id: 'commission-dialogue',
-    title: 'Open a channel',
-    summary: 'Press F near Earth to validate grounded dialogue and optional speech.',
+    title: "Receive AURA's analysis",
+    summary: 'Hold observation range while AURA identifies Earth and reports its findings.',
     objective: { type: 'talked', targetId: 'earth' },
   },
 ] as const satisfies readonly QuestDefinition[];

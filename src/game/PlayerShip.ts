@@ -1,4 +1,5 @@
 import {
+  AdditiveBlending,
   ConeGeometry,
   Group,
   Mesh,
@@ -7,7 +8,9 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+import { modelAssets } from '../content/assets';
 import type { InputController } from './InputController';
+import { loadModelAsset } from './loadModelAsset';
 
 const FORWARD = new Vector3(0, 0, -1);
 
@@ -15,7 +18,8 @@ export class PlayerShip {
   readonly object = new Group();
   readonly velocity = new Vector3();
 
-  readonly #thrustGlow: Mesh;
+  readonly #placeholder = new Group();
+  readonly #thrustGlow = new Group();
   readonly #acceleration = 18;
   readonly #turnRate = 1.15;
   readonly #maxSpeed = 56;
@@ -43,20 +47,66 @@ export class PlayerShip {
     cockpit.scale.set(0.82, 0.5, 1.45);
     cockpit.position.z = -1.05;
 
-    this.#thrustGlow = new Mesh(
-      new ConeGeometry(0.62, 2.2, 12),
-      new MeshBasicMaterial({ color: 0x62f5ff }),
-    );
-    this.#thrustGlow.rotation.x = Math.PI / 2;
-    this.#thrustGlow.position.z = 3.25;
+    this.#thrustGlow.name = 'asteria-engine-plumes';
+    for (const plume of modelAssets.asteria.enginePlumes) {
+      const outer = new Mesh(
+        new ConeGeometry(plume.radius, plume.length, 16),
+        new MeshBasicMaterial({
+          color: 0x22ccea,
+          transparent: true,
+          opacity: 0.48,
+          blending: AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      outer.rotation.x = Math.PI / 2;
+      outer.position.set(
+        plume.position[0],
+        plume.position[1],
+        plume.position[2] + plume.length / 2,
+      );
+
+      const innerLength = plume.length * 0.68;
+      const inner = new Mesh(
+        new ConeGeometry(plume.radius * 0.48, innerLength, 12),
+        new MeshBasicMaterial({
+          color: 0xd9fcff,
+          transparent: true,
+          opacity: 0.82,
+          blending: AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      inner.rotation.x = Math.PI / 2;
+      inner.position.set(
+        plume.position[0],
+        plume.position[1],
+        plume.position[2] + innerLength / 2,
+      );
+      this.#thrustGlow.add(outer, inner);
+    }
     this.#thrustGlow.visible = false;
 
-    this.object.add(hull, cockpit, this.#thrustGlow);
+    this.#placeholder.name = 'procedural-ship-fallback';
+    this.#placeholder.add(hull, cockpit);
+    this.object.add(this.#placeholder, this.#thrustGlow);
     this.object.position.set(0, 3, 92);
   }
 
   get speed(): number {
     return this.velocity.length();
+  }
+
+  async loadVisual(): Promise<boolean> {
+    try {
+      const visual = await loadModelAsset(modelAssets.asteria);
+      this.object.add(visual);
+      this.#placeholder.visible = false;
+      return true;
+    } catch (error) {
+      console.warn('Unable to load Asteria model; using procedural fallback.', error);
+      return false;
+    }
   }
 
   update(deltaSeconds: number, input: InputController): void {
@@ -89,6 +139,6 @@ export class PlayerShip {
     this.object.position.addScaledVector(this.velocity, deltaSeconds);
 
     this.#thrustGlow.visible = thrust > 0;
-    this.#thrustGlow.scale.y = boosting ? 1.7 : 1;
+    this.#thrustGlow.scale.z = boosting ? 1.7 : 1;
   }
 }

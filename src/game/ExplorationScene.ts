@@ -1,6 +1,8 @@
 import {
   AmbientLight,
   Color,
+  DirectionalLight,
+  HemisphereLight,
   Scene,
   Vector3,
 } from 'three';
@@ -25,6 +27,8 @@ export interface ExplorationUpdate {
 }
 
 export class ExplorationScene {
+  static readonly #DETAIL_LOAD_DISTANCE = 360;
+
   readonly scene = new Scene();
   readonly input = new InputController();
   readonly ship = new PlayerShip();
@@ -34,7 +38,12 @@ export class ExplorationScene {
 
   constructor(aspect: number) {
     this.scene.background = new Color(0x01040b);
-    this.scene.add(new AmbientLight(0x8ba9cc, 0.24));
+    this.scene.add(new AmbientLight(0x8ba9cc, 0.38));
+    this.scene.add(new HemisphereLight(0xa8d8ff, 0x111620, 0.72));
+
+    const navigationFill = new DirectionalLight(0xe8f5ff, 1.4);
+    navigationFill.position.set(90, 120, 160);
+    this.scene.add(navigationFill);
     this.scene.add(createStarField());
     this.scene.add(this.ship.object);
 
@@ -42,7 +51,7 @@ export class ExplorationScene {
       (definition) => new CelestialObject(definition),
     );
     for (const celestialObject of this.#celestialObjects) {
-      this.scene.add(celestialObject.mesh);
+      this.scene.add(celestialObject.object);
     }
 
     this.camera = new ChaseCamera(aspect);
@@ -55,6 +64,13 @@ export class ExplorationScene {
 
     for (const celestialObject of this.#celestialObjects) {
       celestialObject.update(deltaSeconds);
+      if (
+        celestialObject.definition.modelAssetId &&
+        celestialObject.object.position.distanceTo(this.ship.object.position) <=
+          ExplorationScene.#DETAIL_LOAD_DISTANCE
+      ) {
+        void celestialObject.loadVisual();
+      }
     }
 
     return {
@@ -64,13 +80,24 @@ export class ExplorationScene {
     };
   }
 
+  async loadAssets(): Promise<boolean> {
+    const earth = this.#celestialObjects.find(
+      (object) => object.definition.id === 'earth',
+    );
+    const [shipLoaded, earthLoaded] = await Promise.all([
+      this.ship.loadVisual(),
+      earth?.loadVisual() ?? Promise.resolve(true),
+    ]);
+    return shipLoaded && earthLoaded;
+  }
+
   isInRange(targetId: string): boolean {
     const target = this.#celestialObjects.find(
       (object) => object.definition.id === targetId,
     );
 
     return target
-      ? target.mesh.position.distanceTo(this.ship.object.position) <=
+      ? target.object.position.distanceTo(this.ship.object.position) <=
           target.definition.interactionRange
       : false;
   }
@@ -88,7 +115,7 @@ export class ExplorationScene {
 
     for (const celestialObject of this.#celestialObjects) {
       this.#distanceVector.subVectors(
-        celestialObject.mesh.position,
+        celestialObject.object.position,
         this.ship.object.position,
       );
       const distance = this.#distanceVector.length();

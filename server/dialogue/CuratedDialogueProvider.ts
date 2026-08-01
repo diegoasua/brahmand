@@ -1,5 +1,6 @@
 import { celestialBodies } from '../../src/content/celestial-bodies';
 import { knowledgeById } from '../../src/content/knowledge';
+import { auraNarrator } from '../../src/content/narrator';
 import type {
   DialogueRequest,
   DialogueResponse,
@@ -28,12 +29,12 @@ export class CuratedDialogueProvider implements DialogueProvider {
     const scienceLine = entries[0]?.summary;
 
     return {
-      speakerId: character.id,
-      speakerName: character.name,
+      speakerId: auraNarrator.id,
+      speakerName: auraNarrator.name,
       text: scienceLine
-        ? `${character.npc.openingLine} ${scienceLine}`
-        : character.npc.openingLine,
-      voiceId: character.npc.voiceId,
+        ? `${character.name} is within observation range. ${scienceLine}`
+        : `${character.name} is within observation range, but reviewed science data is unavailable.`,
+      voiceId: auraNarrator.voiceId,
       grounding,
     };
   }

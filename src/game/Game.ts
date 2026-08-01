@@ -38,6 +38,13 @@ export class Game {
 
   start(): void {
     this.#clock.start();
+    void this.#world.loadAssets().then((loaded) => {
+      this.#hud.setNotice(
+        loaded
+          ? 'Asteria model loaded. Use W/S to begin the systems check.'
+          : 'Asteria model unavailable; procedural flight model active.',
+      );
+    });
     this.#animationFrame = requestAnimationFrame(this.#tick);
   }
 
@@ -73,8 +80,9 @@ export class Game {
       this.#world.isInRange(current.objective.targetId) &&
       this.#quests.record({ type: 'visited', targetId: current.objective.targetId })
     ) {
-      this.#hud.setNotice('Navigation check complete. Open a channel with Earth.');
+      this.#hud.setNotice('Observation range reached. AURA is analyzing the contact…');
       this.#hud.updateQuest(this.#quests.progress);
+      void this.#openChannel(current.objective.targetId);
     }
   }
 

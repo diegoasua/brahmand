@@ -14,7 +14,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Open <http://localhost:5173>. The mock dialogue path works without credentials. To hear generated speech, put a server-side `INWORLD_API_KEY` in `.env` and restart the API.
+Open <http://localhost:5173>. With `INWORLD_API_KEY` configured, AURA's arrival dialogue is generated through Inworld Realtime Router using DeepSeek V4 Flash and spoken with the configured cloned voice. Without credentials, a deterministic grounded fallback keeps local navigation testable.
 
 Controls:
 
@@ -47,9 +47,9 @@ Node API gateway
   dialogue provider + curated knowledge + Inworld TTS
 ```
 
-The browser never receives vendor API keys. Dialogue generation is behind a provider interface, so a future LLM can be added without coupling game systems to one model. Inworld TTS is already wired behind `POST /api/speech`; if no key is configured, dialogue remains readable and the API reports speech as unavailable.
+The browser never receives vendor API keys. Dialogue generation is behind a provider interface and currently uses `deepinfra/deepseek-ai/DeepSeek-V4-Flash` through Inworld Realtime Router. Inworld TTS is wired behind `POST /api/speech`; if no key is configured, fallback dialogue remains readable and the API reports speech as unavailable.
 
-Science is content, not prompt decoration. Facts have an explicit source and review date, NPCs are allowed to use selected knowledge entries, and generated dialogue should be grounded only in that curated context. See [docs/architecture.md](docs/architecture.md) and [docs/content-authoring.md](docs/content-authoring.md).
+Science is content, not prompt decoration. Facts have an explicit source and review date, NPCs are allowed to use selected knowledge entries, and generated dialogue should be grounded only in that curated context. See [docs/architecture.md](docs/architecture.md), [docs/content-authoring.md](docs/content-authoring.md), the [asset pipeline](docs/assets.md), and the [story bible](docs/story/story-bible.md).
 
 ## Repository map
 
@@ -70,7 +70,7 @@ public/assets/     Future models, textures, and authored audio
 
 - Display positions and sizes are intentionally compressed and are never presented as physical scale.
 - The commissioning quest is disposable scaffolding, separate from future authored chapters.
-- The mock dialogue provider is deterministic. A future LLM provider should receive the current quest context and only the NPC's approved knowledge entries.
+- Live AURA dialogue is generated on demand, but receives only the target's approved knowledge entries and current quest context. A deterministic provider exists solely for offline development.
 - No final asset format, physics engine, persistence layer, or deployment platform has been chosen yet.
 
 ## Near-term milestones
@@ -80,3 +80,5 @@ public/assets/     Future models, textures, and authored audio
 3. Select the production dialogue model and add grounded-output validation.
 4. Move from complete-response MP3 speech to streaming TTS if playtesting shows latency warrants it.
 5. Add save-state versioning once quest structure stabilizes.
+
+The first authored mission is being designed in [Chapter 1: The Lost Knowledge Civilization](docs/story/chapter-01-lost-knowledge.md).

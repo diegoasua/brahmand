@@ -24,7 +24,7 @@ Input -> PlayerShip -> ExplorationScene -> semantic event -> QuestDirector
                     providers on the trusted server
 ```
 
-The API's default dialogue provider is deterministic so local development is useful without external services. An LLM implementation can later satisfy the same `DialogueProvider` interface.
+When an Inworld key is configured, the API's dialogue provider sends grounded context to DeepSeek V4 Flash through Inworld Realtime Router. The deterministic provider is retained only so local development remains useful without external services; both satisfy the same `DialogueProvider` interface.
 
 ## Trust boundaries
 
@@ -32,6 +32,7 @@ The API's default dialogue provider is deterministic so local development is use
 - The API validates request size and shape before calling paid services.
 - The client decides presentation; the server decides which knowledge an NPC may use.
 - Model text must eventually pass citation/claim checks before it can affect quest state.
+- Narrative text is generated on demand, while quest completion remains deterministic and cannot be changed by the model.
 - TTS failure is non-fatal. On-screen dialogue remains the accessible source of truth.
 
 ## Scale
