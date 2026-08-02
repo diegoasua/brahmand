@@ -1,7 +1,17 @@
+export type DialogueIntent = 'arrival' | 'fact' | 'conversation';
+
+export interface DialogueTurn {
+  role: 'player' | 'aura';
+  text: string;
+}
+
 export interface DialogueRequest {
   targetId: string;
   questId?: string;
   playerMessage?: string;
+  intent?: DialogueIntent;
+  excludedKnowledgeIds?: string[];
+  history?: DialogueTurn[];
 }
 
 export interface GroundingReference {

@@ -28,6 +28,7 @@ export interface ExplorationUpdate {
   nearestContact: NearbyContact | undefined;
   enteredContactId: string | undefined;
   interactionRequested: boolean;
+  conversationRequested: boolean;
 }
 
 export class ExplorationScene {
@@ -38,6 +39,7 @@ export class ExplorationScene {
   readonly ship = new PlayerShip();
   readonly camera: ChaseCamera;
   readonly #celestialObjects: CelestialObject[];
+  readonly #celestialById: ReadonlyMap<string, CelestialObject>;
   readonly #worldProps: WorldProp[];
   readonly #distanceVector = new Vector3();
   readonly #contactsInRange = new Set<string>();
@@ -56,12 +58,20 @@ export class ExplorationScene {
     this.#celestialObjects = celestialBodies.map(
       (definition) => new CelestialObject(definition),
     );
+    this.#celestialById = new Map(
+      this.#celestialObjects.map((object) => [object.definition.id, object]),
+    );
     for (const celestialObject of this.#celestialObjects) {
       this.scene.add(celestialObject.object);
     }
 
     this.#worldProps = worldProps.map((definition) => new WorldProp(definition));
     for (const worldProp of this.#worldProps) {
+      const targetId = worldProp.definition.orbit?.targetId;
+      const orbitCenter = targetId
+        ? this.#celestialById.get(targetId)?.object.position
+        : undefined;
+      worldProp.update(0, orbitCenter);
       this.scene.add(worldProp.object);
     }
 
@@ -93,7 +103,11 @@ export class ExplorationScene {
     }
 
     for (const worldProp of this.#worldProps) {
-      worldProp.update(deltaSeconds);
+      const targetId = worldProp.definition.orbit?.targetId;
+      const orbitCenter = targetId
+        ? this.#celestialById.get(targetId)?.object.position
+        : undefined;
+      worldProp.update(deltaSeconds, orbitCenter);
       if (
         worldProp.object.position.distanceTo(this.ship.object.position) <=
         ExplorationScene.#WORLD_PROP_LOAD_DISTANCE
@@ -109,6 +123,7 @@ export class ExplorationScene {
       nearestContact,
       enteredContactId,
       interactionRequested: this.input.consumePress('KeyF'),
+      conversationRequested: this.input.consumePress('KeyC'),
     };
   }
 
@@ -131,9 +146,20 @@ export class ExplorationScene {
       (object) => object.definition.id === targetId,
     );
 
-    return target
-      ? target.object.position.distanceTo(this.ship.object.position) <=
-          target.definition.interactionRange
+    if (target) {
+      return (
+        target.object.position.distanceTo(this.ship.object.position) <=
+        target.definition.interactionRange
+      );
+    }
+
+    const worldProp = this.#worldProps.find(
+      (prop) => prop.definition.id === targetId && prop.definition.interaction,
+    );
+
+    return worldProp?.definition.interaction
+      ? worldProp.object.position.distanceTo(this.ship.object.position) <=
+          worldProp.definition.interaction.range
       : false;
   }
 
@@ -163,6 +189,40 @@ export class ExplorationScene {
       const contact: NearbyContact = {
         id: celestialObject.definition.id,
         name: celestialObject.definition.name,
+        distance,
+        inRange,
+      };
+
+      if (!nearest || distance < nearest.distance) {
+        nearest = contact;
+      }
+
+      if (inRange) {
+        currentlyInRange.add(contact.id);
+        if (
+          !this.#contactsInRange.has(contact.id) &&
+          (!entered || distance < entered.distance)
+        ) {
+          entered = contact;
+        }
+      }
+    }
+
+    for (const worldProp of this.#worldProps) {
+      const interaction = worldProp.definition.interaction;
+      if (!interaction) {
+        continue;
+      }
+
+      this.#distanceVector.subVectors(
+        worldProp.object.position,
+        this.ship.object.position,
+      );
+      const distance = this.#distanceVector.length();
+      const inRange = distance <= interaction.range;
+      const contact: NearbyContact = {
+        id: worldProp.definition.id,
+        name: interaction.name,
         distance,
         inRange,
       };

@@ -65,6 +65,17 @@ All 50 delivered Chapter 1–6 GLBs are mapped in `src/content/world-props.ts`. 
 
 Nearby props load before they are readily visible. Distant clusters stream when the ship comes within 700 artistic units; unlike celestial fallbacks, unloaded props have no placeholder geometry, so they never appear as generic spheres.
 
+### Orbital relationships
+
+Space-native props carry explicit orbital definitions instead of merely being placed near a world:
+
+- The ISS asset follows a circular path around Earth inclined 51.6 degrees, matching NASA's documented ISS orbital inclination.
+- The three generic satellite assets use distinct fictional Earth-orbit planes so they do not overlap.
+- Asteroids follow low-eccentricity heliocentric paths in the game's compressed belt region.
+- Comets follow larger, inclined, high-eccentricity ellipses with the Sun at one focus. Their motion solves Kepler's equation so they move more quickly near perihelion.
+
+Rendered orbital radii and elapsed time remain artistic gameplay values, not physical distances or real-time periods. The ISS inclination reference is [NASA's International Space Station overview](https://www.nasa.gov/reference/international-space-station/).
+
 ## Solar System models
 
 The current delivery includes the Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto. Pluto is represented and labeled as a dwarf planet. The Moon retains a lightweight procedural proxy until a dedicated asset arrives.

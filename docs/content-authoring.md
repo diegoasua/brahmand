@@ -15,6 +15,8 @@ The summary should state one teachable idea, avoid false precision, and distingu
 
 An NPC definition contains character presentation, an Inworld voice ID, and an allowlist of knowledge IDs. A dialogue model should receive only the relevant allowlisted entries, the current story beat, and a bounded conversation history.
 
+Each interactable contact should have several independently useful knowledge entries. Quick-fact mode chooses an unseen entry for the current play session before repeating, while conversation mode can consult the complete allowlist to answer follow-up questions. Variation must come from fact selection and phrasing, never from inventing unsupported trivia.
+
 Plan for planets and stars to be characters without implying that invented personality is scientific fact. UI and writing can signal when a line is metaphor, story lore, or reviewed science.
 
 ## Quests

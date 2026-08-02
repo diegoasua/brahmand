@@ -1,4 +1,5 @@
 import type { ModelAssetDefinition } from './assets';
+import type { CelestialBodyId } from './celestial-bodies';
 
 export type StoryRegion =
   | 'earth-orbit'
@@ -15,10 +16,26 @@ export interface WorldPropDefinition {
   displayPosition: readonly [number, number, number];
   displayRotation: readonly [number, number, number];
   rotationRadiansPerSecond?: readonly [number, number, number];
+  orbit?: {
+    targetId: CelestialBodyId;
+    semiMajorAxis: number;
+    eccentricity: number;
+    inclinationDegrees: number;
+    ascendingNodeDegrees: number;
+    meanAnomalyRadians: number;
+    /** Compressed gameplay motion, not a real-time orbital period. */
+    meanMotionRadiansPerSecond: number;
+  };
   bob?: {
     amplitude: number;
     radiansPerSecond: number;
     phase: number;
+  };
+  interaction?: {
+    name: string;
+    classification: string;
+    range: number;
+    knowledgeIds: readonly string[];
   };
 }
 
@@ -377,39 +394,86 @@ export const worldProps = [
   // Chapter 5: recognizable space infrastructure and small-body fields.
   {
     id: 'earth-orbit-iss',
-    name: 'Orbital research station',
+    name: 'International Space Station archive',
     region: 'earth-orbit',
-    model: model('ch5_prop_issstation', 30, 'center'),
+    model: model('ch5_prop_issstation', 14, 'center'),
     displayPosition: [46, 32, -62],
     displayRotation: [12, 28, 8],
     rotationRadiansPerSecond: [0, 0.006, 0],
+    interaction: {
+      name: 'International Space Station',
+      classification: 'historical orbital research station',
+      range: 28,
+      knowledgeIds: [
+        'iss-orbit',
+        'iss-orbital-period',
+        'iss-microgravity-laboratory',
+        'iss-international-partnership',
+      ],
+    },
+    orbit: {
+      targetId: 'earth',
+      semiMajorAxis: 62,
+      eccentricity: 0,
+      inclinationDegrees: 51.6,
+      ascendingNodeDegrees: 18,
+      meanAnomalyRadians: 0.9,
+      meanMotionRadiansPerSecond: 0.055,
+    },
   },
   {
     id: 'earth-satellite-1',
     name: 'Earth observation satellite',
     region: 'earth-orbit',
-    model: model('ch5_prop_satellite1', 7, 'center'),
+    model: model('ch5_prop_satellite1', 3.5, 'center'),
     displayPosition: [-38, 26, 8],
     displayRotation: [8, -20, 22],
     rotationRadiansPerSecond: [0, 0.025, 0],
+    orbit: {
+      targetId: 'earth',
+      semiMajorAxis: 50,
+      eccentricity: 0.02,
+      inclinationDegrees: 82,
+      ascendingNodeDegrees: 70,
+      meanAnomalyRadians: 2.4,
+      meanMotionRadiansPerSecond: 0.042,
+    },
   },
   {
     id: 'earth-satellite-2',
     name: 'Communications satellite',
     region: 'earth-orbit',
-    model: model('ch5_prop_satellite2', 7, 'center'),
+    model: model('ch5_prop_satellite2', 3.5, 'center'),
     displayPosition: [76, -15, 25],
     displayRotation: [-12, 35, 0],
     rotationRadiansPerSecond: [0.01, -0.022, 0],
+    orbit: {
+      targetId: 'earth',
+      semiMajorAxis: 74,
+      eccentricity: 0.05,
+      inclinationDegrees: 18,
+      ascendingNodeDegrees: 135,
+      meanAnomalyRadians: 4.1,
+      meanMotionRadiansPerSecond: 0.03,
+    },
   },
   {
     id: 'earth-satellite-3',
     name: 'Navigation satellite',
     region: 'earth-orbit',
-    model: model('ch5_prop_satellite3', 7, 'center'),
+    model: model('ch5_prop_satellite3', 3.5, 'center'),
     displayPosition: [98, 31, -56],
     displayRotation: [18, 15, -14],
     rotationRadiansPerSecond: [0, 0.02, 0.01],
+    orbit: {
+      targetId: 'earth',
+      semiMajorAxis: 92,
+      eccentricity: 0.03,
+      inclinationDegrees: 56,
+      ascendingNodeDegrees: 245,
+      meanAnomalyRadians: 5.3,
+      meanMotionRadiansPerSecond: 0.024,
+    },
   },
   {
     id: 'asteroid-1',
@@ -419,6 +483,15 @@ export const worldProps = [
     displayPosition: [620, 30, -470],
     displayRotation: [18, 32, -12],
     rotationRadiansPerSecond: [0.018, 0.03, 0.01],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 1220,
+      eccentricity: 0.04,
+      inclinationDegrees: 3,
+      ascendingNodeDegrees: 12,
+      meanAnomalyRadians: 0.2,
+      meanMotionRadiansPerSecond: 0.0018,
+    },
   },
   {
     id: 'asteroid-2',
@@ -428,6 +501,15 @@ export const worldProps = [
     displayPosition: [660, -40, -510],
     displayRotation: [-20, 5, 16],
     rotationRadiansPerSecond: [0.012, -0.024, 0.018],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 1300,
+      eccentricity: 0.08,
+      inclinationDegrees: 7,
+      ascendingNodeDegrees: 54,
+      meanAnomalyRadians: 0.48,
+      meanMotionRadiansPerSecond: 0.00165,
+    },
   },
   {
     id: 'asteroid-3',
@@ -437,6 +519,15 @@ export const worldProps = [
     displayPosition: [700, 55, -545],
     displayRotation: [8, -28, 24],
     rotationRadiansPerSecond: [-0.015, 0.028, 0.012],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 1375,
+      eccentricity: 0.06,
+      inclinationDegrees: 11,
+      ascendingNodeDegrees: 98,
+      meanAnomalyRadians: 0.72,
+      meanMotionRadiansPerSecond: 0.0015,
+    },
   },
   {
     id: 'asteroid-4',
@@ -446,6 +537,15 @@ export const worldProps = [
     displayPosition: [742, -15, -580],
     displayRotation: [25, 12, -18],
     rotationRadiansPerSecond: [0.01, 0.018, -0.015],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 1450,
+      eccentricity: 0.11,
+      inclinationDegrees: 5,
+      ascendingNodeDegrees: 160,
+      meanAnomalyRadians: 0.95,
+      meanMotionRadiansPerSecond: 0.00138,
+    },
   },
   {
     id: 'asteroid-5',
@@ -455,6 +555,15 @@ export const worldProps = [
     displayPosition: [790, 70, -620],
     displayRotation: [-12, 40, 10],
     rotationRadiansPerSecond: [-0.012, -0.02, 0.017],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 1540,
+      eccentricity: 0.09,
+      inclinationDegrees: 14,
+      ascendingNodeDegrees: 220,
+      meanAnomalyRadians: 1.18,
+      meanMotionRadiansPerSecond: 0.00125,
+    },
   },
   {
     id: 'comet-1',
@@ -464,6 +573,15 @@ export const worldProps = [
     displayPosition: [1870, 320, -1030],
     displayRotation: [18, -35, 12],
     rotationRadiansPerSecond: [0.004, 0.008, 0],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 2100,
+      eccentricity: 0.7,
+      inclinationDegrees: 28,
+      ascendingNodeDegrees: 32,
+      meanAnomalyRadians: 1.3,
+      meanMotionRadiansPerSecond: 0.00072,
+    },
   },
   {
     id: 'comet-2',
@@ -473,6 +591,15 @@ export const worldProps = [
     displayPosition: [2700, -280, -1450],
     displayRotation: [-15, 22, -8],
     rotationRadiansPerSecond: [0.003, -0.007, 0.002],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 2900,
+      eccentricity: 0.82,
+      inclinationDegrees: 61,
+      ascendingNodeDegrees: 148,
+      meanAnomalyRadians: 2.8,
+      meanMotionRadiansPerSecond: 0.00046,
+    },
   },
   {
     id: 'comet-3',
@@ -482,6 +609,15 @@ export const worldProps = [
     displayPosition: [3320, 280, -2080],
     displayRotation: [24, 15, 18],
     rotationRadiansPerSecond: [-0.004, 0.006, 0],
+    orbit: {
+      targetId: 'sun',
+      semiMajorAxis: 4200,
+      eccentricity: 0.9,
+      inclinationDegrees: 104,
+      ascendingNodeDegrees: 275,
+      meanAnomalyRadians: 4.5,
+      meanMotionRadiansPerSecond: 0.00028,
+    },
   },
 
   // Navigation furniture is attached to the exposed engineering platform.

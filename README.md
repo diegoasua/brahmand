@@ -23,7 +23,8 @@ Controls:
 - Arrow keys: pitch
 - `Q` / `E`: roll
 - `Shift`: boost
-- `F`: open a channel with a nearby object
+- `F`: hear a quick, non-repeating fact about a nearby contact
+- `C`: open a text conversation with AURA about the nearby contact
 
 Useful commands:
 

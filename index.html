@@ -32,7 +32,8 @@
         </aside>
 
         <div id="interaction-prompt" class="interaction-prompt" hidden>
-          <kbd>F</kbd> OPEN CHANNEL
+          <kbd>F</kbd> QUICK FACT <span aria-hidden="true">·</span>
+          <kbd>C</kbd> ASK AURA
         </div>
 
         <article id="dialogue" class="dialogue" aria-live="polite" hidden>
@@ -48,13 +49,37 @@
           ></a>
         </article>
 
+        <form id="conversation-form" class="conversation-form" hidden>
+          <label for="conversation-input">
+            ASK AURA ABOUT <strong id="conversation-target">THIS CONTACT</strong>
+          </label>
+          <div
+            id="conversation-log"
+            class="conversation-form__log"
+            aria-live="polite"
+            hidden
+          ></div>
+          <div class="conversation-form__row">
+            <input
+              id="conversation-input"
+              name="message"
+              type="text"
+              maxlength="500"
+              autocomplete="off"
+              placeholder="Ask a science question…"
+            />
+            <button type="submit">SEND</button>
+          </div>
+          <p>Enter to send · Escape to close</p>
+        </form>
+
         <p id="notice" class="notice" aria-live="polite">
           Flight systems online. Use W/S to begin the systems check.
         </p>
 
         <details class="controls">
           <summary>Flight controls</summary>
-          <p>W/S thrust · A/D yaw · arrows pitch · Q/E roll · Shift boost · F talk</p>
+          <p>W/S thrust · A/D yaw · arrows pitch · Q/E roll · Shift boost · F fact · C conversation</p>
         </details>
       </section>
     </main>

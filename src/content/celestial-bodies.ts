@@ -30,7 +30,11 @@ export const celestialBodies = [
     interactionRange: 42,
     modelAssetId: 'earth',
     npc: {
-      knowledgeIds: ['earth-atmosphere-composition'],
+      knowledgeIds: [
+        'earth-atmosphere-composition',
+        'earth-surface-water',
+        'earth-magnetosphere',
+      ],
     },
   },
   {
@@ -43,7 +47,11 @@ export const celestialBodies = [
     rotationRadiansPerSecond: 0.009,
     interactionRange: 24,
     npc: {
-      knowledgeIds: ['moon-synchronous-rotation'],
+      knowledgeIds: [
+        'moon-synchronous-rotation',
+        'moon-surface-gravity',
+        'moon-exosphere-and-ice',
+      ],
     },
   },
   {
@@ -57,7 +65,11 @@ export const celestialBodies = [
     interactionRange: 42,
     modelAssetId: 'venus',
     npc: {
-      knowledgeIds: ['venus-runaway-greenhouse'],
+      knowledgeIds: [
+        'venus-runaway-greenhouse',
+        'venus-retrograde-rotation',
+        'venus-surface-pressure',
+      ],
     },
   },
   {
@@ -71,7 +83,11 @@ export const celestialBodies = [
     interactionRange: 25,
     modelAssetId: 'mercury',
     npc: {
-      knowledgeIds: ['mercury-smallest-fastest'],
+      knowledgeIds: [
+        'mercury-smallest-fastest',
+        'mercury-long-solar-day',
+        'mercury-temperature-range',
+      ],
     },
   },
   {
@@ -85,7 +101,7 @@ export const celestialBodies = [
     interactionRange: 34,
     modelAssetId: 'mars',
     npc: {
-      knowledgeIds: ['mars-day-length'],
+      knowledgeIds: ['mars-day-length', 'mars-two-moons', 'mars-olympus-mons'],
     },
   },
   {
@@ -99,7 +115,11 @@ export const celestialBodies = [
     interactionRange: 70,
     modelAssetId: 'jupiter',
     npc: {
-      knowledgeIds: ['jupiter-largest-fast-rotation'],
+      knowledgeIds: [
+        'jupiter-largest-fast-rotation',
+        'jupiter-composition',
+        'jupiter-galilean-moons',
+      ],
     },
   },
   {
@@ -113,7 +133,11 @@ export const celestialBodies = [
     interactionRange: 82,
     modelAssetId: 'saturn',
     npc: {
-      knowledgeIds: ['saturn-ring-composition'],
+      knowledgeIds: [
+        'saturn-ring-composition',
+        'saturn-low-density',
+        'saturn-titan',
+      ],
     },
   },
   {
@@ -127,7 +151,11 @@ export const celestialBodies = [
     interactionRange: 52,
     modelAssetId: 'uranus',
     npc: {
-      knowledgeIds: ['uranus-sideways-rotation'],
+      knowledgeIds: [
+        'uranus-sideways-rotation',
+        'uranus-orbital-period',
+        'uranus-ice-giant-atmosphere',
+      ],
     },
   },
   {
@@ -141,7 +169,11 @@ export const celestialBodies = [
     interactionRange: 50,
     modelAssetId: 'neptune',
     npc: {
-      knowledgeIds: ['neptune-most-distant-planet'],
+      knowledgeIds: [
+        'neptune-most-distant-planet',
+        'neptune-extreme-winds',
+        'neptune-triton-retrograde',
+      ],
     },
   },
   {
@@ -155,7 +187,11 @@ export const celestialBodies = [
     interactionRange: 24,
     modelAssetId: 'pluto',
     npc: {
-      knowledgeIds: ['pluto-kuiper-belt-dwarf-planet'],
+      knowledgeIds: [
+        'pluto-kuiper-belt-dwarf-planet',
+        'pluto-charon-system',
+        'pluto-heart-shaped-region',
+      ],
     },
   },
   {
@@ -169,7 +205,13 @@ export const celestialBodies = [
     interactionRange: 115,
     modelAssetId: 'sun',
     npc: {
-      knowledgeIds: ['sun-system-mass'],
+      knowledgeIds: [
+        'sun-system-mass',
+        'sun-nuclear-fusion',
+        'sun-age-and-light-time',
+      ],
     },
   },
 ] as const satisfies readonly CelestialBodyDefinition[];
+
+export type CelestialBodyId = (typeof celestialBodies)[number]['id'];

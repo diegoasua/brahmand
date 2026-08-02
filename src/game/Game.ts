@@ -1,6 +1,7 @@
 import { Clock, WebGLRenderer } from 'three';
 import { commissioningQuests } from '../content/commissioning-quests';
 import { QuestDirector } from '../domain/quest';
+import type { DialogueIntent } from '../shared/contracts';
 import { DialogueController } from '../services/DialogueController';
 import { GameApiClient } from '../services/GameApiClient';
 import { Hud } from '../ui/Hud';
@@ -9,11 +10,12 @@ import { ExplorationScene } from './ExplorationScene';
 export class Game {
   readonly #renderer: WebGLRenderer;
   readonly #world: ExplorationScene;
-  readonly #hud = new Hud();
+  readonly #hud: Hud;
   readonly #quests = new QuestDirector(commissioningQuests);
   readonly #dialogue: DialogueController;
   readonly #clock = new Clock();
   readonly #introducedContactIds = new Set<string>();
+  #conversationTargetId: string | undefined;
   #animationFrame = 0;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -26,6 +28,10 @@ export class Game {
     this.#renderer.setSize(window.innerWidth, window.innerHeight, false);
 
     this.#world = new ExplorationScene(window.innerWidth / window.innerHeight);
+    this.#hud = new Hud({
+      onConversationSubmit: this.#onConversationSubmit,
+      onConversationClose: this.#onConversationClose,
+    });
 
     const api = new GameApiClient(import.meta.env.VITE_API_BASE_URL);
     this.#dialogue = new DialogueController(api, {
@@ -54,6 +60,7 @@ export class Game {
     window.removeEventListener('resize', this.#onResize);
     this.#world.dispose();
     this.#dialogue.dispose();
+    this.#hud.dispose();
     this.#renderer.dispose();
   }
 
@@ -70,9 +77,19 @@ export class Game {
       !this.#introducedContactIds.has(update.enteredContactId)
     ) {
       this.#introducedContactIds.add(update.enteredContactId);
-      void this.#openChannel(update.enteredContactId);
+      void this.#openChannel(update.enteredContactId, 'arrival');
     } else if (update.interactionRequested && contact?.inRange) {
-      void this.#openChannel(contact.id);
+      void this.#openChannel(contact.id, 'fact');
+    }
+
+    if (update.conversationRequested) {
+      if (contact?.inRange) {
+        this.#conversationTargetId = contact.id;
+        this.#hud.openConversation(contact.name);
+        this.#hud.setNotice(`Conversation channel open with AURA about ${contact.name}.`);
+      } else {
+        this.#hud.setNotice('Move within observation range before opening a conversation.');
+      }
     }
 
     this.#renderer.render(this.#world.scene, this.#world.camera.camera);
@@ -92,11 +109,19 @@ export class Game {
     }
   }
 
-  async #openChannel(targetId: string): Promise<void> {
+  async #openChannel(
+    targetId: string,
+    intent: DialogueIntent,
+    playerMessage?: string,
+  ): Promise<void> {
     const currentQuest = this.#quests.progress.current;
     const questId =
       currentQuest?.objective.targetId === targetId ? currentQuest.id : undefined;
-    const connected = await this.#dialogue.talk(targetId, questId);
+    const connected = await this.#dialogue.talk(targetId, {
+      questId,
+      intent,
+      playerMessage,
+    });
 
     if (
       connected &&
@@ -105,6 +130,24 @@ export class Game {
       this.#hud.updateQuest(this.#quests.progress);
     }
   }
+
+  readonly #onConversationSubmit = (message: string): void => {
+    if (!this.#conversationTargetId) {
+      this.#hud.setNotice('No conversation target is selected.');
+      return;
+    }
+
+    void this.#openChannel(
+      this.#conversationTargetId,
+      'conversation',
+      message,
+    );
+  };
+
+  readonly #onConversationClose = (): void => {
+    this.#conversationTargetId = undefined;
+    this.#hud.setNotice('Conversation channel closed.');
+  };
 
   readonly #onResize = (): void => {
     const width = window.innerWidth;

@@ -1,41 +1,37 @@
-import { celestialBodies } from '../../src/content/celestial-bodies';
-import { knowledgeById } from '../../src/content/knowledge';
 import { auraNarrator } from '../../src/content/narrator';
 import type {
   DialogueRequest,
   DialogueResponse,
-  GroundingReference,
 } from '../../src/shared/contracts';
-import { HttpError } from '../http-errors';
 import type { DialogueProvider } from './DialogueProvider';
+import {
+  prepareDialogueKnowledge,
+  toGroundingReference,
+} from './dialogueKnowledge';
 
 export class CuratedDialogueProvider implements DialogueProvider {
+  constructor(private readonly random: () => number = Math.random) {}
+
   async generate(request: DialogueRequest): Promise<DialogueResponse> {
-    const character = celestialBodies.find((body) => body.id === request.targetId);
-
-    if (!character) {
-      throw new HttpError(404, `Unknown dialogue target: ${request.targetId}.`);
-    }
-
-    const entries = character.npc.knowledgeIds
-      .map((id) => knowledgeById.get(id))
-      .filter((entry) => entry !== undefined);
-    const grounding: GroundingReference[] = entries.map((entry) => ({
-      knowledgeId: entry.id,
-      title: entry.title,
-      sourceLabel: entry.source.label,
-      sourceUrl: entry.source.url,
-    }));
-    const scienceLine = entries[0]?.summary;
+    const intent =
+      request.intent ?? (request.playerMessage ? 'conversation' : 'fact');
+    const { target, entries } = prepareDialogueKnowledge(
+      { ...request, intent },
+      this.random,
+    );
+    const entry = entries[Math.floor(this.random() * entries.length)] ?? entries[0];
+    const scienceLine = entry?.summary;
 
     return {
       speakerId: auraNarrator.id,
       speakerName: auraNarrator.name,
       text: scienceLine
-        ? `${character.name} is within observation range. ${scienceLine}`
-        : `${character.name} is within observation range, but reviewed science data is unavailable.`,
+        ? intent === 'conversation' && request.playerMessage
+          ? `Here is what our reviewed data confirms about ${target.name}: ${scienceLine}`
+          : `${target.name} is within observation range. ${scienceLine}`
+        : `${target.name} is within observation range, but reviewed science data is unavailable.`,
       voiceId: auraNarrator.voiceId,
-      grounding,
+      grounding: entry ? [toGroundingReference(entry)] : [],
     };
   }
 }

@@ -1,4 +1,8 @@
-import type { DialogueResponse } from '../shared/contracts';
+import type {
+  DialogueIntent,
+  DialogueResponse,
+  DialogueTurn,
+} from '../shared/contracts';
 import type { GameApiClient } from './GameApiClient';
 
 export interface DialogueCallbacks {
@@ -6,10 +10,18 @@ export interface DialogueCallbacks {
   onNotice(message: string): void;
 }
 
+export interface DialogueTalkOptions {
+  questId?: string;
+  intent?: DialogueIntent;
+  playerMessage?: string;
+}
+
 export class DialogueController {
   #busy = false;
   #audioContext: AudioContext | undefined;
   #audioSource: AudioBufferSourceNode | undefined;
+  readonly #seenKnowledgeIds = new Map<string, Set<string>>();
+  readonly #history = new Map<string, DialogueTurn[]>();
 
   constructor(
     private readonly api: GameApiClient,
@@ -19,16 +31,48 @@ export class DialogueController {
     window.addEventListener('pointerdown', this.#unlockAudio, { once: true });
   }
 
-  async talk(targetId: string, questId?: string): Promise<boolean> {
+  async talk(
+    targetId: string,
+    options: DialogueTalkOptions = {},
+  ): Promise<boolean> {
     if (this.#busy) {
+      this.callbacks.onNotice('AURA is still responding…');
       return false;
     }
 
+    const intent = options.intent ?? 'fact';
+    const history = this.#history.get(targetId) ?? [];
+    const seenKnowledgeIds = this.#seenKnowledgeIds.get(targetId) ?? new Set();
     this.#busy = true;
-    this.callbacks.onNotice('Opening channel…');
+    this.callbacks.onNotice(
+      intent === 'conversation' ? 'AURA is considering your question…' : 'Opening channel…',
+    );
 
     try {
-      const response = await this.api.requestDialogue({ targetId, questId });
+      const response = await this.api.requestDialogue({
+        targetId,
+        questId: options.questId,
+        playerMessage: options.playerMessage,
+        intent,
+        excludedKnowledgeIds:
+          intent === 'conversation' ? undefined : [...seenKnowledgeIds],
+        history: intent === 'conversation' ? history.slice(-8) : undefined,
+      });
+
+      if (intent !== 'conversation') {
+        for (const reference of response.grounding) {
+          seenKnowledgeIds.add(reference.knowledgeId);
+        }
+        this.#seenKnowledgeIds.set(targetId, seenKnowledgeIds);
+      }
+
+      const updatedHistory = [...history];
+      if (options.playerMessage) {
+        updatedHistory.push({ role: 'player', text: options.playerMessage });
+      }
+      updatedHistory.push({ role: 'aura', text: response.text });
+      this.#history.set(targetId, updatedHistory.slice(-8));
+
       this.callbacks.onDialogue(response);
       this.callbacks.onNotice('Channel connected. Requesting voice…');
       void this.#speak(response);

@@ -22,6 +22,7 @@ describe('InworldRouterDialogueProvider', () => {
       model: 'deepinfra/deepseek-ai/DeepSeek-V4-Flash',
       voiceId: 'cloned-narrator',
       fetchImplementation,
+      random: () => 0,
     });
 
     const response = await provider.generate({ targetId: 'earth' });
@@ -52,11 +53,49 @@ describe('InworldRouterDialogueProvider', () => {
       model: 'deepinfra/deepseek-ai/DeepSeek-V4-Flash',
       voiceId: 'cloned-narrator',
       fetchImplementation,
+      random: () => 0,
     });
 
     await expect(provider.generate({ targetId: 'unknown' })).rejects.toMatchObject({
       status: 404,
     });
     expect(fetchImplementation).not.toHaveBeenCalled();
+  });
+
+  it('passes bounded history and all approved target facts for conversation', async () => {
+    const fetchImplementation = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: 'Its tilt carries it across many latitudes.' } }],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const provider = new InworldRouterDialogueProvider({
+      apiKey: 'test-key',
+      model: 'deepinfra/deepseek-ai/DeepSeek-V4-Flash',
+      voiceId: 'cloned-narrator',
+      fetchImplementation,
+      random: () => 0,
+    });
+
+    const response = await provider.generate({
+      targetId: 'earth-orbit-iss',
+      intent: 'conversation',
+      playerMessage: 'Why is the orbit tilted?',
+      history: [
+        { role: 'player', text: 'What is this station?' },
+        { role: 'aura', text: 'It is the International Space Station.' },
+      ],
+    });
+
+    expect(response.grounding).toHaveLength(4);
+    const [, request] = fetchImplementation.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(request.body)) as {
+      messages: Array<{ content: string }>;
+    };
+    expect(body.messages[1]?.content).toContain('Interaction mode: conversation');
+    expect(body.messages[1]?.content).toContain('PLAYER: What is this station?');
+    expect(body.messages[1]?.content).toContain('51.6 degrees');
   });
 });

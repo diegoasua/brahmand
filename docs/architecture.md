@@ -26,11 +26,14 @@ Input -> PlayerShip -> ExplorationScene -> semantic event -> QuestDirector
 
 When an Inworld key is configured, the API's dialogue provider sends grounded context to DeepSeek V4 Flash through Inworld Realtime Router. The deterministic provider is retained only so local development remains useful without external services; both satisfy the same `DialogueProvider` interface.
 
+Dialogue requests carry one of three bounded intents: arrival, quick fact, or conversation. The browser remembers science-entry IDs already used for each target during the current play session, and quick-fact requests exclude those entries until the target's pool is exhausted. Conversation requests include at most eight recent turns; the server still supplies scientific truth exclusively from the target's reviewed allowlist.
+
 ## Trust boundaries
 
 - `INWORLD_API_KEY` exists only in the Node process.
 - The API validates request size and shape before calling paid services.
 - The client decides presentation; the server decides which knowledge an NPC may use.
+- Conversation history is context, not scientific authority. The server labels it as untrusted and never adds its claims to the approved fact set.
 - Model text must eventually pass citation/claim checks before it can affect quest state.
 - Narrative text is generated on demand, while quest completion remains deterministic and cannot be changed by the model.
 - TTS failure is non-fatal. On-screen dialogue remains the accessible source of truth.

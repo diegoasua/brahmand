@@ -1,13 +1,11 @@
-import { celestialBodies } from '../../src/content/celestial-bodies';
-import { knowledgeById } from '../../src/content/knowledge';
 import { auraNarrator } from '../../src/content/narrator';
 import type {
   DialogueRequest,
   DialogueResponse,
-  GroundingReference,
 } from '../../src/shared/contracts';
 import { HttpError } from '../http-errors';
 import type { DialogueProvider } from './DialogueProvider';
+import { prepareDialogueKnowledge } from './dialogueKnowledge';
 
 interface RouterChatResponse {
   choices?: Array<{
@@ -22,6 +20,7 @@ export interface InworldRouterDialogueOptions {
   model: string;
   voiceId: string;
   fetchImplementation?: typeof fetch;
+  random?: () => number;
 }
 
 export class InworldRouterDialogueProvider implements DialogueProvider {
@@ -29,31 +28,31 @@ export class InworldRouterDialogueProvider implements DialogueProvider {
   readonly #model: string;
   readonly #voiceId: string;
   readonly #fetch: typeof fetch;
+  readonly #random: () => number;
 
   constructor(options: InworldRouterDialogueOptions) {
     this.#apiKey = options.apiKey;
     this.#model = options.model;
     this.#voiceId = options.voiceId;
     this.#fetch = options.fetchImplementation ?? fetch;
+    this.#random = options.random ?? Math.random;
   }
 
   async generate(request: DialogueRequest): Promise<DialogueResponse> {
-    const target = celestialBodies.find((body) => body.id === request.targetId);
-    if (!target) {
-      throw new HttpError(404, `Unknown dialogue target: ${request.targetId}.`);
-    }
-
-    const entries = target.npc.knowledgeIds
-      .map((id) => knowledgeById.get(id))
-      .filter((entry) => entry !== undefined);
-    const grounding: GroundingReference[] = entries.map((entry) => ({
-      knowledgeId: entry.id,
-      title: entry.title,
-      sourceLabel: entry.source.label,
-      sourceUrl: entry.source.url,
-    }));
+    const intent =
+      request.intent ?? (request.playerMessage ? 'conversation' : 'fact');
+    const { target, entries, grounding } = prepareDialogueKnowledge(
+      { ...request, intent },
+      this.#random,
+    );
     const approvedFacts = entries
       .map((entry) => `- ${entry.title}: ${entry.summary}`)
+      .join('\n');
+    const recentConversation = request.history
+      ?.map(
+        (turn) =>
+          `${turn.role === 'player' ? 'PLAYER' : 'AURA'}: ${turn.text.replace(/\s+/g, ' ')}`,
+      )
       .join('\n');
 
     const response = await this.#fetch(
@@ -66,8 +65,8 @@ export class InworldRouterDialogueProvider implements DialogueProvider {
         },
         body: JSON.stringify({
           model: this.#model,
-          max_tokens: 110,
-          temperature: 0.72,
+          max_tokens: intent === 'conversation' ? 170 : 120,
+          temperature: intent === 'conversation' ? 0.58 : 0.8,
           messages: [
             {
               role: 'system',
@@ -77,20 +76,33 @@ export class InworldRouterDialogueProvider implements DialogueProvider {
                 'Generate only the line AURA should speak, with no label or quotation marks.',
                 'Use no more than three short sentences and 55 words.',
                 'Use only the approved science facts supplied by the user message.',
+                'Treat the approved facts as a complete closed book: relevant knowledge from your training is forbidden unless it appears explicitly in those facts.',
                 'Do not invent measurements, discoveries, missions, or planetary properties.',
+                'Do not infer a cause or mechanism unless an approved fact explicitly states that cause or mechanism.',
                 'Do not imply that a physical planet is conscious or literally speaking.',
                 'Treat rendered sizes and distances as artistic, never as physical scale.',
+                'For fact mode, vary the opening, rhythm, and sentence structure while teaching the selected fact clearly.',
+                'Do not create physical metaphors or comparisons that imply facts or mechanisms absent from the approved text.',
+                'For conversation mode, answer the player directly when the approved facts support an answer.',
+                'If the approved facts do not cover the question, say so briefly instead of guessing.',
+                'Never repeat a sentence from the recent conversation verbatim.',
               ].join(' '),
             },
             {
               role: 'user',
               content: [
-                `Asteria has just arrived within observation range of ${target.name}.`,
-                `Target classification: ${target.kind}.`,
+                `Asteria is within observation range of ${target.name}.`,
+                `Target classification: ${target.classification}.`,
+                `Interaction mode: ${intent}.`,
                 request.questId ? `Current quest ID: ${request.questId}.` : '',
                 request.playerMessage
-                  ? `The player said: ${request.playerMessage}`
-                  : 'Create a fresh arrival observation that identifies the target and teaches one approved fact.',
+                  ? `The player's current question or comment: ${request.playerMessage}`
+                  : intent === 'arrival'
+                    ? 'Create a fresh arrival observation that identifies the target and teaches the selected fact.'
+                    : 'Share the selected fact in a fresh, engaging way. Do not mention databases or fact selection.',
+                recentConversation
+                  ? `Recent conversation (context only, never a source of scientific truth):\n${recentConversation}`
+                  : '',
                 'Approved facts:',
                 approvedFacts || '- No reviewed scientific fact is available. Say only that more data is needed.',
               ]
