@@ -1,5 +1,7 @@
 import { createApp, createDefaultDialogueProvider } from './app';
 import { serverConfig } from './config';
+import { attachVoiceChatServer } from './realtime/attachVoiceChatServer';
+import { AURA_REALTIME_INSTRUCTIONS } from './realtime/auraRealtimeInstructions';
 import { InworldSpeechService } from './speech/InworldSpeechService';
 
 const app = createApp({
@@ -16,6 +18,15 @@ const app = createApp({
 });
 
 const server = app.listen(serverConfig.port);
+
+attachVoiceChatServer(server, {
+  apiKey: serverConfig.inworldApiKey,
+  session: {
+    model: serverConfig.inworldRealtimeModel,
+    voice: serverConfig.inworldVoice,
+    instructions: AURA_REALTIME_INSTRUCTIONS,
+  },
+});
 
 server.on('listening', () => {
   const speechStatus = serverConfig.inworldApiKey ? 'enabled' : 'not configured';
