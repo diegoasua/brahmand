@@ -10,6 +10,8 @@ export interface CelestialBodyDefinition {
   kind: 'star' | 'planet' | 'dwarf-planet' | 'moon';
   displayPosition: readonly [number, number, number];
   displayRadius: number;
+  /** Defaults to displayRadius; set only when the visible collision surface differs (e.g. Saturn's rings). */
+  collisionRadius?: number;
   color: number;
   rotationRadiansPerSecond: number;
   interactionRange: number;
@@ -108,6 +110,9 @@ export const celestialBodies = [
     kind: 'planet',
     displayPosition: [1450, 160, -950],
     displayRadius: 44,
+    // displayRadius here is the ring span, not the globe (see assets.ts saturn comment);
+    // collisionRadius approximates the actual visible globe surface.
+    collisionRadius: 20,
     color: 0xd8bf8d,
     rotationRadiansPerSecond: 0.038,
     interactionRange: 82,

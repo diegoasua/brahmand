@@ -95,7 +95,7 @@ export class ExplorationScene {
         this.ship.velocity,
         ExplorationScene.#SHIP_COLLISION_RADIUS,
         celestialObject.object.position,
-        celestialObject.definition.displayRadius,
+        celestialObject.definition.collisionRadius ?? celestialObject.definition.displayRadius,
       );
     }
 

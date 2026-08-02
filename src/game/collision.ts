@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
 
+// Reused across calls; safe because resolveSphereCollision is synchronous and never re-entered.
 const SCRATCH_OFFSET = new Vector3();
 
 export function resolveSphereCollision(
@@ -13,6 +14,7 @@ export function resolveSphereCollision(
   SCRATCH_OFFSET.subVectors(shipPosition, bodyPosition);
   const distance = SCRATCH_OFFSET.length();
 
+  // Coincident centers give no usable normal; skip rather than divide by zero.
   if (distance >= minDistance || distance === 0) {
     return;
   }
