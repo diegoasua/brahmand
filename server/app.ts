@@ -6,12 +6,18 @@ import { CuratedDialogueProvider } from './dialogue/CuratedDialogueProvider';
 import type { DialogueProvider } from './dialogue/DialogueProvider';
 import { InworldRouterDialogueProvider } from './dialogue/InworldRouterDialogueProvider';
 import { HttpError } from './http-errors';
-import { dialogueRequestSchema, speechRequestSchema } from './schemas';
+import type { RealtimeConversationService } from './realtime/InworldRealtimeService';
+import {
+  dialogueRequestSchema,
+  realtimeConfigQuerySchema,
+  speechRequestSchema,
+} from './schemas';
 import type { SpeechService } from './speech/InworldSpeechService';
 
 export interface AppServices {
   dialogue: DialogueProvider;
   speech: SpeechService;
+  realtime: RealtimeConversationService;
 }
 
 export function createApp(services: AppServices) {
@@ -46,8 +52,37 @@ export function createApp(services: AppServices) {
       .send(Buffer.from(audio));
   };
 
+  const realtimeConfigHandler: RequestHandler = async (request, response) => {
+    const parsed = realtimeConfigQuerySchema.safeParse(request.query);
+    if (!parsed.success) {
+      throw new HttpError(400, 'Invalid realtime voice target.');
+    }
+
+    response
+      .set('Cache-Control', 'private, no-store')
+      .json(await services.realtime.configure(parsed.data.targetId));
+  };
+
+  const realtimeCallHandler: RequestHandler = async (request, response) => {
+    if (typeof request.body !== 'string' || request.body.trim().length === 0) {
+      throw new HttpError(400, 'A WebRTC session description is required.');
+    }
+
+    response
+      .status(200)
+      .type('application/sdp')
+      .set('Cache-Control', 'private, no-store')
+      .send(await services.realtime.exchangeSdp(request.body));
+  };
+
   app.post('/api/dialogue', dialogueHandler);
   app.post('/api/speech', speechHandler);
+  app.get('/api/realtime/config', realtimeConfigHandler);
+  app.post(
+    '/api/realtime/calls',
+    express.text({ type: 'application/sdp', limit: '128kb' }),
+    realtimeCallHandler,
+  );
 
   app.use((_request, _response, next) => {
     next(new HttpError(404, 'Route not found.'));

@@ -1,5 +1,6 @@
 import { createApp, createDefaultDialogueProvider } from './app';
 import { serverConfig } from './config';
+import { InworldRealtimeService } from './realtime/InworldRealtimeService';
 import { InworldSpeechService } from './speech/InworldSpeechService';
 
 const app = createApp({
@@ -12,6 +13,13 @@ const app = createApp({
     apiKey: serverConfig.inworldApiKey,
     defaultVoice: serverConfig.inworldVoice,
     model: serverConfig.inworldTtsModel,
+  }),
+  realtime: new InworldRealtimeService({
+    apiKey: serverConfig.inworldApiKey,
+    model: serverConfig.inworldLlmModel,
+    voiceId: serverConfig.inworldVoice,
+    ttsModel: serverConfig.inworldTtsModel,
+    sttModel: serverConfig.inworldSttModel,
   }),
 });
 

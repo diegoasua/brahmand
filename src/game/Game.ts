@@ -4,6 +4,7 @@ import { QuestDirector } from '../domain/quest';
 import type { DialogueIntent } from '../shared/contracts';
 import { DialogueController } from '../services/DialogueController';
 import { GameApiClient } from '../services/GameApiClient';
+import { VoiceConversationController } from '../services/VoiceConversationController';
 import { Hud } from '../ui/Hud';
 import { ExplorationScene } from './ExplorationScene';
 
@@ -13,6 +14,7 @@ export class Game {
   readonly #hud: Hud;
   readonly #quests = new QuestDirector(commissioningQuests);
   readonly #dialogue: DialogueController;
+  readonly #voiceConversation: VoiceConversationController;
   readonly #clock = new Clock();
   readonly #introducedContactIds = new Set<string>();
   #conversationTargetId: string | undefined;
@@ -28,15 +30,24 @@ export class Game {
     this.#renderer.setSize(window.innerWidth, window.innerHeight, false);
 
     this.#world = new ExplorationScene(window.innerWidth / window.innerHeight);
-    this.#hud = new Hud({
-      onConversationSubmit: this.#onConversationSubmit,
-      onConversationClose: this.#onConversationClose,
-    });
+    this.#hud = new Hud();
 
     const api = new GameApiClient(import.meta.env.VITE_API_BASE_URL);
     this.#dialogue = new DialogueController(api, {
       onDialogue: (response) => this.#hud.showDialogue(response),
       onNotice: (message) => this.#hud.setNotice(message),
+    });
+    this.#voiceConversation = new VoiceConversationController(api, {
+      onStateChange: (state) => this.#hud.setConversationState(state),
+      onTranscript: (role, text) => {
+        this.#hud.showConversationTranscript(role, text);
+        if (role === 'player' && this.#conversationTargetId) {
+          this.#recordTalkedQuest(this.#conversationTargetId);
+        }
+      },
+      onGrounding: (grounding) =>
+        this.#hud.setConversationGrounding(grounding),
+      onError: (message) => this.#hud.setNotice(message),
     });
 
     this.#hud.updateQuest(this.#quests.progress);
@@ -60,7 +71,7 @@ export class Game {
     window.removeEventListener('resize', this.#onResize);
     this.#world.dispose();
     this.#dialogue.dispose();
-    this.#hud.dispose();
+    this.#voiceConversation.dispose();
     this.#renderer.dispose();
   }
 
@@ -73,22 +84,34 @@ export class Game {
     this.#advanceVisitQuest();
 
     if (
-      update.enteredContactId &&
-      !this.#introducedContactIds.has(update.enteredContactId)
+      this.#conversationTargetId &&
+      !this.#world.isInRange(this.#conversationTargetId)
     ) {
-      this.#introducedContactIds.add(update.enteredContactId);
-      void this.#openChannel(update.enteredContactId, 'arrival');
-    } else if (update.interactionRequested && contact?.inRange) {
-      void this.#openChannel(contact.id, 'fact');
+      this.#closeVoiceConversation('Voice link closed: contact is out of range.');
+    } else if (
+      this.#conversationTargetId &&
+      (update.conversationRequested || update.conversationCloseRequested)
+    ) {
+      this.#closeVoiceConversation('Voice conversation ended.');
+    } else if (update.conversationRequested) {
+      if (contact?.inRange) {
+        void this.#startVoiceConversation(contact.id, contact.name);
+      } else {
+        this.#hud.setNotice(
+          'Move within observation range before opening a voice link.',
+        );
+      }
     }
 
-    if (update.conversationRequested) {
-      if (contact?.inRange) {
-        this.#conversationTargetId = contact.id;
-        this.#hud.openConversation(contact.name);
-        this.#hud.setNotice(`Conversation channel open with AURA about ${contact.name}.`);
-      } else {
-        this.#hud.setNotice('Move within observation range before opening a conversation.');
+    if (!this.#conversationTargetId) {
+      if (
+        update.enteredContactId &&
+        !this.#introducedContactIds.has(update.enteredContactId)
+      ) {
+        this.#introducedContactIds.add(update.enteredContactId);
+        void this.#openChannel(update.enteredContactId, 'arrival');
+      } else if (update.interactionRequested && contact?.inRange) {
+        void this.#openChannel(contact.id, 'fact');
       }
     }
 
@@ -112,7 +135,6 @@ export class Game {
   async #openChannel(
     targetId: string,
     intent: DialogueIntent,
-    playerMessage?: string,
   ): Promise<void> {
     const currentQuest = this.#quests.progress.current;
     const questId =
@@ -120,34 +142,34 @@ export class Game {
     const connected = await this.#dialogue.talk(targetId, {
       questId,
       intent,
-      playerMessage,
     });
 
-    if (
-      connected &&
-      this.#quests.record({ type: 'talked', targetId })
-    ) {
-      this.#hud.updateQuest(this.#quests.progress);
+    if (connected) {
+      this.#recordTalkedQuest(targetId);
     }
   }
 
-  readonly #onConversationSubmit = (message: string): void => {
-    if (!this.#conversationTargetId) {
-      this.#hud.setNotice('No conversation target is selected.');
-      return;
-    }
+  async #startVoiceConversation(targetId: string, targetName: string): Promise<void> {
+    this.#conversationTargetId = targetId;
+    this.#introducedContactIds.add(targetId);
+    this.#dialogue.interruptSpeech();
+    this.#hud.openConversation(targetName);
+    this.#hud.setNotice('Opening microphone and Inworld realtime voice link…');
+    await this.#voiceConversation.start(targetId);
+  }
 
-    void this.#openChannel(
-      this.#conversationTargetId,
-      'conversation',
-      message,
-    );
-  };
-
-  readonly #onConversationClose = (): void => {
+  #closeVoiceConversation(notice: string): void {
+    this.#voiceConversation.stop();
     this.#conversationTargetId = undefined;
-    this.#hud.setNotice('Conversation channel closed.');
-  };
+    this.#hud.closeConversation();
+    this.#hud.setNotice(notice);
+  }
+
+  #recordTalkedQuest(targetId: string): void {
+    if (this.#quests.record({ type: 'talked', targetId })) {
+      this.#hud.updateQuest(this.#quests.progress);
+    }
+  }
 
   readonly #onResize = (): void => {
     const width = window.innerWidth;

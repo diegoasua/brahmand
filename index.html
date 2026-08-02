@@ -33,7 +33,7 @@
 
         <div id="interaction-prompt" class="interaction-prompt" hidden>
           <kbd>F</kbd> QUICK FACT <span aria-hidden="true">·</span>
-          <kbd>C</kbd> ASK AURA
+          <kbd>C</kbd> VOICE LINK
         </div>
 
         <article id="dialogue" class="dialogue" aria-live="polite" hidden>
@@ -49,29 +49,23 @@
           ></a>
         </article>
 
-        <form id="conversation-form" class="conversation-form" hidden>
-          <label for="conversation-input">
-            ASK AURA ABOUT <strong id="conversation-target">THIS CONTACT</strong>
-          </label>
+        <section id="conversation-panel" class="conversation-panel" hidden>
+          <p class="conversation-panel__heading">
+            VOICE LINK · <strong id="conversation-target">THIS CONTACT</strong>
+          </p>
+          <div class="conversation-panel__status" role="status" aria-live="polite">
+            <span id="conversation-pulse" class="conversation-panel__pulse"></span>
+            <span id="conversation-status">CONNECTING TO AURA…</span>
+          </div>
           <div
             id="conversation-log"
-            class="conversation-form__log"
+            class="conversation-panel__log"
             aria-live="polite"
             hidden
           ></div>
-          <div class="conversation-form__row">
-            <input
-              id="conversation-input"
-              name="message"
-              type="text"
-              maxlength="500"
-              autocomplete="off"
-              placeholder="Ask a science question…"
-            />
-            <button type="submit">SEND</button>
-          </div>
-          <p>Enter to send · Escape to close</p>
-        </form>
+          <div id="conversation-sources" class="conversation-panel__sources" hidden></div>
+          <p class="conversation-panel__hint">Speak naturally · C or Escape to end</p>
+        </section>
 
         <p id="notice" class="notice" aria-live="polite">
           Flight systems online. Use W/S to begin the systems check.
@@ -79,7 +73,7 @@
 
         <details class="controls">
           <summary>Flight controls</summary>
-          <p>W/S thrust · A/D yaw · arrows pitch · Q/E roll · Shift boost · F fact · C conversation</p>
+          <p>W/S thrust · A/D yaw · arrows pitch · Q/E roll · Shift boost · F fact · C voice link</p>
         </details>
       </section>
     </main>

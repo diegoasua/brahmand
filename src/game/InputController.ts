@@ -7,6 +7,7 @@ const CONTROLLED_KEYS = new Set([
   'KeyE',
   'KeyF',
   'KeyC',
+  'Escape',
   'ArrowUp',
   'ArrowDown',
   'ShiftLeft',

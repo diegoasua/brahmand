@@ -16,24 +16,31 @@ Three.js objects should not become save data. Stable string IDs connect renderer
 ```text
 Input -> PlayerShip -> ExplorationScene -> semantic event -> QuestDirector
                                   |
-                                  v
-                           DialogueController
+                   +--------------+--------------+
+                   |                             |
+                   v                             v
+           DialogueController        VoiceConversationController
+                   |                             |
+       POST /api/dialogue, /speech       WebRTC microphone/audio
+                   |                     via server-proxied SDP
+                   +--------------+--------------+
                                   |
-                    POST /api/dialogue, /api/speech
-                                  |
-                    providers on the trusted server
+                         Inworld services
 ```
 
 When an Inworld key is configured, the API's dialogue provider sends grounded context to DeepSeek V4 Flash through Inworld Realtime Router. The deterministic provider is retained only so local development remains useful without external services; both satisfy the same `DialogueProvider` interface.
 
-Dialogue requests carry one of three bounded intents: arrival, quick fact, or conversation. The browser remembers science-entry IDs already used for each target during the current play session, and quick-fact requests exclude those entries until the target's pool is exhausted. Conversation requests include at most eight recent turns; the server still supplies scientific truth exclusively from the target's reviewed allowlist.
+Dialogue requests carry bounded arrival and quick-fact intents. The browser remembers science-entry IDs already used for each target during the current play session, and quick-fact requests exclude those entries until the target's pool is exhausted.
+
+Pressing `C` creates a target-specific Inworld Realtime API session over WebRTC. The browser sends microphone audio as a native WebRTC track; Inworld STT and semantic voice activity detection establish turns, DeepSeek answers within a server-built closed-book science prompt, and Inworld TTS-2 returns the cloned AURA voice as a remote audio track. Transcripts remain visible for accessibility, but there is no text-entry interaction. After session setup the microphone track remains active, matching Inworld's continuous WebRTC flow; browser echo cancellation and server turn detection prevent AURA's output from becoming a new player turn.
 
 ## Trust boundaries
 
 - `INWORLD_API_KEY` exists only in the Node process.
+- ICE and SDP exchange requests are authenticated by the Node gateway; the key is never returned in realtime configuration.
 - The API validates request size and shape before calling paid services.
 - The client decides presentation; the server decides which knowledge an NPC may use.
-- Conversation history is context, not scientific authority. The server labels it as untrusted and never adds its claims to the approved fact set.
+- Realtime conversation history is context, not scientific authority. The session instructions restrict scientific claims to the server-supplied approved fact set.
 - Model text must eventually pass citation/claim checks before it can affect quest state.
 - Narrative text is generated on demand, while quest completion remains deterministic and cannot be changed by the model.
 - TTS failure is non-fatal. On-screen dialogue remains the accessible source of truth.
@@ -51,4 +58,3 @@ These choices should follow real content and playtests rather than precede them:
 - procedural universe generation
 - final LLM provider and moderation policy
 - asset pipeline and compression targets
-- streaming audio transport

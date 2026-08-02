@@ -14,7 +14,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Open <http://localhost:5173>. With `INWORLD_API_KEY` configured, AURA's arrival dialogue is generated through Inworld Realtime Router using DeepSeek V4 Flash and spoken with the configured cloned voice. Without credentials, a deterministic grounded fallback keeps local navigation testable.
+Open <http://localhost:5173>. With `INWORLD_API_KEY` configured, AURA's arrival dialogue is generated through Inworld Router using DeepSeek V4 Flash and spoken with the configured cloned voice. Nearby voice conversations use Inworld's realtime WebRTC pipeline for microphone input, speech recognition, turn detection, grounded generation, and cloned-voice output. The browser will request microphone permission the first time you start one. Without credentials, deterministic grounded quick facts keep local navigation testable, but realtime voice conversation is unavailable.
 
 Controls:
 
@@ -24,7 +24,8 @@ Controls:
 - `Q` / `E`: roll
 - `Shift`: boost
 - `F`: hear a quick, non-repeating fact about a nearby contact
-- `C`: open a text conversation with AURA about the nearby contact
+- `C`: start or end a voice-to-voice conversation with AURA about the nearby contact
+- `Escape`: end the current voice conversation
 
 Useful commands:
 
@@ -40,15 +41,15 @@ npm run dev:api     # API only
 
 ```text
 Browser / Three.js
-  flight + camera + interaction + HUD
+  flight + HUD + WebRTC microphone/audio
                  |
-                 | typed HTTP contracts
+                 | typed API + server-proxied SDP
                  v
 Node API gateway
-  dialogue provider + curated knowledge + Inworld TTS
+  curated knowledge + Inworld Router / STT / TTS
 ```
 
-The browser never receives vendor API keys. Dialogue generation is behind a provider interface and currently uses `deepinfra/deepseek-ai/DeepSeek-V4-Flash` through Inworld Realtime Router. Inworld TTS is wired behind `POST /api/speech`; if no key is configured, fallback dialogue remains readable and the API reports speech as unavailable.
+The browser never receives vendor API keys. Quick dialogue generation uses `deepinfra/deepseek-ai/DeepSeek-V4-Flash` through Inworld Router, with TTS behind `POST /api/speech`. Voice conversation uses an Inworld WebRTC session whose ICE and SDP requests are authenticated by the Node gateway; the session receives only the selected contact's reviewed facts.
 
 Science is content, not prompt decoration. Facts have an explicit source and review date, NPCs are allowed to use selected knowledge entries, and generated dialogue should be grounded only in that curated context. See [docs/architecture.md](docs/architecture.md), [docs/content-authoring.md](docs/content-authoring.md), the [asset pipeline](docs/assets.md), and the [story bible](docs/story/story-bible.md).
 
@@ -79,7 +80,7 @@ public/assets/     Future models, textures, and authored audio
 1. Replace primitive geometry with the first ship and celestial assets.
 2. Import the authored opening chapter as data, without embedding story rules in renderer code.
 3. Select the production dialogue model and add grounded-output validation.
-4. Move from complete-response MP3 speech to streaming TTS if playtesting shows latency warrants it.
+4. Measure realtime voice latency and tune semantic turn detection from playtests.
 5. Add save-state versioning once quest structure stabilizes.
 
 The first authored mission is being designed in [Chapter 1: The Lost Knowledge Civilization](docs/story/chapter-01-lost-knowledge.md).

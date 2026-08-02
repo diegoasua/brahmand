@@ -20,6 +20,7 @@ export class DialogueController {
   #busy = false;
   #audioContext: AudioContext | undefined;
   #audioSource: AudioBufferSourceNode | undefined;
+  #playbackGeneration = 0;
   readonly #seenKnowledgeIds = new Map<string, Set<string>>();
   readonly #history = new Map<string, DialogueTurn[]>();
 
@@ -41,6 +42,7 @@ export class DialogueController {
     }
 
     const intent = options.intent ?? 'fact';
+    const playbackGeneration = this.#playbackGeneration;
     const history = this.#history.get(targetId) ?? [];
     const seenKnowledgeIds = this.#seenKnowledgeIds.get(targetId) ?? new Set();
     this.#busy = true;
@@ -59,6 +61,10 @@ export class DialogueController {
         history: intent === 'conversation' ? history.slice(-8) : undefined,
       });
 
+      if (playbackGeneration !== this.#playbackGeneration) {
+        return false;
+      }
+
       if (intent !== 'conversation') {
         for (const reference of response.grounding) {
           seenKnowledgeIds.add(reference.knowledgeId);
@@ -75,7 +81,7 @@ export class DialogueController {
 
       this.callbacks.onDialogue(response);
       this.callbacks.onNotice('Channel connected. Requesting voice…');
-      void this.#speak(response);
+      void this.#speak(response, playbackGeneration);
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Dialogue unavailable.';
@@ -93,17 +99,37 @@ export class DialogueController {
     void this.#audioContext?.close();
   }
 
-  async #speak(dialogue: DialogueResponse): Promise<void> {
+  interruptSpeech(): void {
+    this.#playbackGeneration += 1;
+    try {
+      this.#audioSource?.stop();
+    } catch {
+      // The source may already have ended.
+    }
+    this.#audioSource = undefined;
+  }
+
+  async #speak(
+    dialogue: DialogueResponse,
+    playbackGeneration: number,
+  ): Promise<void> {
     try {
       const blob = await this.api.requestSpeech({
         text: dialogue.text,
         voiceId: dialogue.voiceId,
       });
 
+      if (playbackGeneration !== this.#playbackGeneration) {
+        return;
+      }
+
       const context = this.#audioContext ?? new AudioContext();
       this.#audioContext = context;
       await context.resume();
       const buffer = await context.decodeAudioData(await blob.arrayBuffer());
+      if (playbackGeneration !== this.#playbackGeneration) {
+        return;
+      }
 
       this.#audioSource?.stop();
       const source = context.createBufferSource();

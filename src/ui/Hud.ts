@@ -1,6 +1,10 @@
 import type { QuestProgress } from '../domain/quest';
 import type { NearbyContact } from '../game/ExplorationScene';
-import type { DialogueResponse } from '../shared/contracts';
+import type {
+  DialogueResponse,
+  GroundingReference,
+} from '../shared/contracts';
+import type { VoiceConversationState } from '../services/VoiceConversationController';
 
 function requireElement<T extends HTMLElement>(id: string): T {
   const element = document.querySelector<T>(`#${id}`);
@@ -8,11 +12,6 @@ function requireElement<T extends HTMLElement>(id: string): T {
     throw new Error(`Required HUD element #${id} is missing.`);
   }
   return element;
-}
-
-export interface HudCallbacks {
-  onConversationSubmit(message: string): void;
-  onConversationClose(): void;
 }
 
 export class Hud {
@@ -27,23 +26,20 @@ export class Hud {
   readonly #dialogueText = requireElement<HTMLElement>('dialogue-text');
   readonly #scienceSource = requireElement<HTMLAnchorElement>('science-source');
   readonly #notice = requireElement<HTMLElement>('notice');
-  readonly #conversationForm =
-    requireElement<HTMLFormElement>('conversation-form');
-  readonly #conversationInput =
-    requireElement<HTMLInputElement>('conversation-input');
+  readonly #conversationPanel =
+    requireElement<HTMLElement>('conversation-panel');
+  readonly #conversationStatus =
+    requireElement<HTMLElement>('conversation-status');
   readonly #conversationTarget =
     requireElement<HTMLElement>('conversation-target');
   readonly #conversationLog =
     requireElement<HTMLElement>('conversation-log');
+  readonly #conversationSources =
+    requireElement<HTMLElement>('conversation-sources');
   #activeConversationTarget = '';
 
-  constructor(private readonly callbacks: HudCallbacks) {
-    this.#conversationForm.addEventListener('submit', this.#onConversationSubmit);
-    this.#conversationForm.addEventListener('keydown', this.#onConversationKeyDown);
-  }
-
   get isConversationOpen(): boolean {
-    return !this.#conversationForm.hidden;
+    return !this.#conversationPanel.hidden;
   }
 
   updateTelemetry(speed: number, contact: NearbyContact | undefined): void {
@@ -76,10 +72,6 @@ export class Hud {
       this.#scienceSource.textContent = `Science source: ${grounding.sourceLabel}`;
       this.#scienceSource.href = grounding.sourceUrl;
     }
-
-    if (this.isConversationOpen) {
-      this.#appendConversationTurn('AURA', response.text, 'aura');
-    }
   }
 
   setNotice(message: string): void {
@@ -90,52 +82,47 @@ export class Hud {
     if (this.#activeConversationTarget !== targetName) {
       this.#conversationLog.replaceChildren();
       this.#conversationLog.hidden = true;
+      this.#conversationSources.replaceChildren();
+      this.#conversationSources.hidden = true;
       this.#activeConversationTarget = targetName;
     }
     this.#conversationTarget.textContent = targetName.toUpperCase();
-    this.#conversationForm.hidden = false;
+    this.#conversationPanel.hidden = false;
     this.#prompt.hidden = true;
-    requestAnimationFrame(() => this.#conversationInput.focus());
+    this.setConversationState('connecting');
   }
 
   closeConversation(): void {
-    this.#conversationForm.hidden = true;
-    this.#conversationInput.value = '';
-    this.#conversationInput.blur();
+    this.#conversationPanel.hidden = true;
+    this.#conversationPanel.dataset.state = 'idle';
   }
 
-  dispose(): void {
-    this.#conversationForm.removeEventListener(
-      'submit',
-      this.#onConversationSubmit,
-    );
-    this.#conversationForm.removeEventListener(
-      'keydown',
-      this.#onConversationKeyDown,
-    );
+  setConversationState(state: VoiceConversationState): void {
+    this.#conversationPanel.dataset.state = state;
+    this.#conversationStatus.textContent = conversationStateLabels[state];
   }
 
-  readonly #onConversationSubmit = (event: SubmitEvent): void => {
-    event.preventDefault();
-    const message = this.#conversationInput.value.trim();
-    if (!message) {
-      return;
+  showConversationTranscript(role: 'player' | 'aura', text: string): void {
+    this.#appendConversationTurn(role === 'player' ? 'YOU' : 'AURA', text, role);
+  }
+
+  setConversationGrounding(grounding: GroundingReference[]): void {
+    this.#conversationSources.replaceChildren();
+    const uniqueSources = new Map(
+      grounding.map((reference) => [reference.sourceUrl, reference.sourceLabel]),
+    );
+
+    for (const [url, label] of uniqueSources) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noreferrer';
+      link.textContent = label;
+      this.#conversationSources.append(link);
     }
 
-    this.#conversationInput.value = '';
-    this.#appendConversationTurn('YOU', message, 'player');
-    this.callbacks.onConversationSubmit(message);
-  };
-
-  readonly #onConversationKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape') {
-      return;
-    }
-
-    event.preventDefault();
-    this.closeConversation();
-    this.callbacks.onConversationClose();
-  };
+    this.#conversationSources.hidden = uniqueSources.size === 0;
+  }
 
   #appendConversationTurn(
     speaker: string,
@@ -143,7 +130,7 @@ export class Hud {
     role: 'player' | 'aura',
   ): void {
     const line = document.createElement('p');
-    line.className = `conversation-form__turn conversation-form__turn--${role}`;
+    line.className = `conversation-panel__turn conversation-panel__turn--${role}`;
 
     const label = document.createElement('strong');
     label.textContent = `${speaker}: `;
@@ -158,3 +145,13 @@ export class Hud {
     this.#conversationLog.scrollTop = this.#conversationLog.scrollHeight;
   }
 }
+
+const conversationStateLabels: Record<VoiceConversationState, string> = {
+  idle: 'VOICE LINK IDLE',
+  connecting: 'CONNECTING TO AURA…',
+  listening: 'LISTENING — ASK A QUESTION',
+  hearing: 'HEARING YOU…',
+  thinking: 'AURA IS THINKING…',
+  speaking: 'AURA IS SPEAKING',
+  unavailable: 'VOICE LINK UNAVAILABLE',
+};

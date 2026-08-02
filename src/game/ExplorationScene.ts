@@ -29,6 +29,7 @@ export interface ExplorationUpdate {
   enteredContactId: string | undefined;
   interactionRequested: boolean;
   conversationRequested: boolean;
+  conversationCloseRequested: boolean;
 }
 
 export class ExplorationScene {
@@ -124,6 +125,7 @@ export class ExplorationScene {
       enteredContactId,
       interactionRequested: this.input.consumePress('KeyF'),
       conversationRequested: this.input.consumePress('KeyC'),
+      conversationCloseRequested: this.input.consumePress('Escape'),
     };
   }
 

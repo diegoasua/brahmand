@@ -24,3 +24,7 @@ export const speechRequestSchema = z.object({
   text: z.string().trim().min(1).max(2_000),
   voiceId: z.string().trim().min(1).max(100),
 });
+
+export const realtimeConfigQuerySchema = z.object({
+  targetId: z.string().trim().min(1).max(80),
+});

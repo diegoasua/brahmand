@@ -88,14 +88,14 @@ body {
 
 .quest-card,
 .dialogue,
-.conversation-form {
+.conversation-panel {
   border: 1px solid rgb(99 220 240 / 28%);
   background: linear-gradient(135deg, rgb(5 18 30 / 88%), rgb(4 10 18 / 60%));
   box-shadow: 0 1rem 4rem rgb(0 0 0 / 24%);
   backdrop-filter: blur(12px);
 }
 
-.conversation-form {
+.conversation-panel {
   position: absolute;
   bottom: clamp(13rem, 28vh, 17rem);
   left: 50%;
@@ -103,34 +103,66 @@ body {
   padding: 0.85rem 1rem;
   transform: translateX(-50%);
   pointer-events: auto;
-}
-
-.conversation-form label,
-.conversation-form p,
-.conversation-form input,
-.conversation-form button {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }
 
-.conversation-form label {
-  display: block;
-  margin-bottom: 0.55rem;
+.conversation-panel__heading {
+  margin: 0 0 0.65rem;
   color: #63dcf0;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
 }
 
-.conversation-form label strong {
+.conversation-panel__heading strong {
   color: #e6f7ff;
   font-weight: 500;
 }
 
-.conversation-form__row {
+.conversation-panel__status {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+  color: #b8ced7;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
 }
 
-.conversation-form__log {
+.conversation-panel__pulse {
+  width: 0.65rem;
+  height: 0.65rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #7895a2;
+  box-shadow: 0 0 0.8rem currentcolor;
+}
+
+.conversation-panel[data-state='connecting'] .conversation-panel__pulse,
+.conversation-panel[data-state='thinking'] .conversation-panel__pulse {
+  background: #f0c879;
+  color: #f0c879;
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+
+.conversation-panel[data-state='listening'] .conversation-panel__pulse,
+.conversation-panel[data-state='hearing'] .conversation-panel__pulse {
+  background: #63dcf0;
+  color: #63dcf0;
+  animation: voice-pulse 0.8s ease-in-out infinite;
+}
+
+.conversation-panel[data-state='speaking'] .conversation-panel__pulse {
+  background: #9cf69c;
+  color: #9cf69c;
+  animation: voice-pulse 0.55s ease-in-out infinite;
+}
+
+.conversation-panel[data-state='unavailable'] .conversation-panel__pulse {
+  background: #f08080;
+  color: #f08080;
+}
+
+.conversation-panel__log {
   max-height: 9rem;
   margin-bottom: 0.65rem;
   overflow-y: auto;
@@ -138,57 +170,49 @@ body {
   padding-left: 0.75rem;
 }
 
-.conversation-form__turn {
+.conversation-panel__turn {
   margin: 0 0 0.45rem !important;
   color: #b8ced7 !important;
   font-size: 0.7rem !important;
   line-height: 1.45;
 }
 
-.conversation-form__turn strong {
+.conversation-panel__turn strong {
   color: #63dcf0;
   font-weight: 500;
 }
 
-.conversation-form__turn--player strong {
+.conversation-panel__turn--player strong {
   color: #f0c879;
 }
 
-.conversation-form input {
-  min-width: 0;
-  flex: 1;
-  border: 1px solid rgb(99 220 240 / 45%);
-  outline: none;
-  background: rgb(1 7 13 / 86%);
-  color: #e6f7ff;
-  padding: 0.65rem 0.75rem;
-  font-size: 0.78rem;
+.conversation-panel__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  margin-top: 0.65rem;
 }
 
-.conversation-form input:focus {
-  border-color: #63dcf0;
-  box-shadow: 0 0 0 2px rgb(99 220 240 / 12%);
+.conversation-panel__sources a {
+  color: #8ab9c6;
+  font-size: 0.62rem;
 }
 
-.conversation-form button {
-  border: 1px solid #63dcf0;
-  background: rgb(25 111 129 / 48%);
-  color: #fff;
-  padding: 0.55rem 0.85rem;
-  cursor: pointer;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+.conversation-panel__sources[hidden] {
+  display: none;
 }
 
-.conversation-form button:hover,
-.conversation-form button:focus-visible {
-  background: rgb(34 145 166 / 62%);
-}
-
-.conversation-form p {
+.conversation-panel__hint {
   margin: 0.45rem 0 0;
   color: #7895a2;
   font-size: 0.6rem;
+}
+
+@keyframes voice-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.72);
+  }
 }
 
 .quest-card {
@@ -325,5 +349,9 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
+  }
+
+  .conversation-panel__pulse {
+    animation: none !important;
   }
 }

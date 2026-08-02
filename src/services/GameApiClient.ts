@@ -2,6 +2,7 @@ import type {
   ApiErrorResponse,
   DialogueRequest,
   DialogueResponse,
+  RealtimeConversationConfig,
   SpeechRequest,
 } from '../shared/contracts';
 
@@ -38,6 +39,35 @@ export class GameApiClient {
     }
 
     return response.blob();
+  }
+
+  async requestRealtimeConfig(
+    targetId: string,
+  ): Promise<RealtimeConversationConfig> {
+    const query = new URLSearchParams({ targetId });
+    const response = await fetch(
+      `${this.#baseUrl}/api/realtime/config?${query.toString()}`,
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.#readError(response));
+    }
+
+    return response.json() as Promise<RealtimeConversationConfig>;
+  }
+
+  async exchangeRealtimeSdp(sdp: string): Promise<string> {
+    const response = await fetch(`${this.#baseUrl}/api/realtime/calls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/sdp' },
+      body: sdp,
+    });
+
+    if (!response.ok) {
+      throw new Error(await this.#readError(response));
+    }
+
+    return response.text();
   }
 
   async #readError(response: Response): Promise<string> {
