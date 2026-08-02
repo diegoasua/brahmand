@@ -87,7 +87,8 @@ body {
 }
 
 .quest-card,
-.dialogue {
+.dialogue,
+.voice-chat {
   border: 1px solid rgb(99 220 240 / 28%);
   background: linear-gradient(135deg, rgb(5 18 30 / 88%), rgb(4 10 18 / 60%));
   box-shadow: 0 1rem 4rem rgb(0 0 0 / 24%);
@@ -171,6 +172,51 @@ kbd {
 
 .dialogue__source[hidden] {
   display: none;
+}
+
+.voice-chat {
+  position: absolute;
+  top: 50%;
+  right: clamp(1rem, 3vw, 2.5rem);
+  width: min(20rem, calc(100vw - 2rem));
+  max-height: 60vh;
+  padding: 1rem 1.1rem;
+  overflow-y: auto;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.voice-chat__status {
+  margin: 0 0 0.55rem;
+  color: #63dcf0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.voice-chat__transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-chat__transcript li {
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.voice-chat__transcript .voice-chat__line--player::before {
+  color: #8ab9c6;
+  content: 'YOU: ';
+}
+
+.voice-chat__transcript .voice-chat__line--aura::before {
+  color: #63dcf0;
+  content: 'AURA: ';
 }
 
 .notice {

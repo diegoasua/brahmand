@@ -22,6 +22,10 @@ export class Hud {
   readonly #dialogueText = requireElement<HTMLElement>('dialogue-text');
   readonly #scienceSource = requireElement<HTMLAnchorElement>('science-source');
   readonly #notice = requireElement<HTMLElement>('notice');
+  readonly #voiceChat = requireElement<HTMLElement>('voice-chat');
+  readonly #voiceChatStatus = requireElement<HTMLElement>('voice-chat-status');
+  readonly #voiceChatTranscript = requireElement<HTMLUListElement>('voice-chat-transcript');
+  readonly #voiceChatLines = new Map<'PLAYER' | 'AURA', HTMLLIElement>();
 
   updateTelemetry(speed: number, contact: NearbyContact | undefined): void {
     this.#speed.textContent = `${speed.toFixed(1)} u/s`;
@@ -57,5 +61,36 @@ export class Hud {
 
   setNotice(message: string): void {
     this.#notice.textContent = message;
+  }
+
+  showVoiceChat(): void {
+    this.#voiceChat.hidden = false;
+    this.#voiceChatTranscript.replaceChildren();
+    this.#voiceChatLines.clear();
+  }
+
+  hideVoiceChat(): void {
+    this.#voiceChat.hidden = true;
+  }
+
+  setVoiceChatStatus(text: string): void {
+    this.#voiceChatStatus.textContent = text;
+  }
+
+  appendVoiceChatDelta(speaker: 'PLAYER' | 'AURA', text: string): void {
+    let line = this.#voiceChatLines.get(speaker);
+    if (!line) {
+      line = document.createElement('li');
+      line.className =
+        speaker === 'AURA' ? 'voice-chat__line--aura' : 'voice-chat__line--player';
+      this.#voiceChatTranscript.append(line);
+      this.#voiceChatLines.set(speaker, line);
+    }
+    line.textContent = `${line.textContent ?? ''}${text}`;
+    this.#voiceChatTranscript.scrollTop = this.#voiceChatTranscript.scrollHeight;
+  }
+
+  completeVoiceChatTurn(speaker: 'PLAYER' | 'AURA'): void {
+    this.#voiceChatLines.delete(speaker);
   }
 }
