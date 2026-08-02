@@ -7,6 +7,7 @@ export class WorldProp {
   readonly #baseY: number;
   readonly #orbitMajorAxis = new Vector3(1, 0, 0);
   readonly #orbitMinorAxis = new Vector3(0, 0, 1);
+  readonly #formationOffset = new Vector3();
   #localCollisionBounds: Box3 | undefined;
   #elapsedSeconds = 0;
   #meanAnomaly = 0;
@@ -24,6 +25,9 @@ export class WorldProp {
 
     const orbit = definition.orbit;
     if (orbit) {
+      if (orbit.formationOffset) {
+        this.#formationOffset.set(...orbit.formationOffset);
+      }
       this.#meanAnomaly = orbit.meanAnomalyRadians;
       const ascendingNode = MathUtils.degToRad(orbit.ascendingNodeDegrees);
       this.#orbitMajorAxis.set(
@@ -69,7 +73,8 @@ export class WorldProp {
       this.object.position
         .copy(orbitCenter)
         .addScaledVector(this.#orbitMajorAxis, majorDistance)
-        .addScaledVector(this.#orbitMinorAxis, minorDistance);
+        .addScaledVector(this.#orbitMinorAxis, minorDistance)
+        .add(this.#formationOffset);
     }
 
     const bob = this.definition.bob;

@@ -54,11 +54,11 @@ The older `public/assets/models/asteria/asteria.glb` export remains in the repos
 
 ## Story-world props
 
-All 50 delivered Chapter 1–6 GLBs are mapped in `src/content/world-props.ts`. The filename prefixes drive their initial role and placement:
+All 50 delivered Chapter 1–6 GLBs are mapped in `src/content/world-props.ts`. The filename prefixes drive their role and orbital placement:
 
 - Chapter 1 modular and material assets form a fictional exposed engineering corridor in near-Earth space.
 - Chapter 2 plants, samples, and laboratory equipment form a fictional orbital ecosystem test array near Mars.
-- Chapter 3 artifacts form a remote archive installation beyond Saturn.
+- Chapter 3 artifacts form a remote archive installation around Saturn.
 - Chapter 4 characters appear as temporary holographic story-presence models at related encounter sites.
 - Chapter 5 stations and satellites occupy near-Earth space; asteroids and comets occupy progressively more distant regions.
 - Chapter 6 navigation consoles attach to the engineering corridor.
@@ -71,14 +71,18 @@ Celestial bodies use swept spherical collision hulls based on their rendered rad
 
 ### Orbital relationships
 
-Space-native props carry explicit orbital definitions instead of merely being placed near a world:
+Every authored prop carries an explicit orbital definition instead of remaining at a fixed map coordinate:
 
+- The engineering corridor, its samples, AURA hologram, and navigation consoles move as one fictional formation around Earth.
+- The ecosystem laboratory, plants, samples, and LUNA avatar move as one fictional formation around Mars.
+- The memory archive and Orion avatar move as one fictional formation around Saturn.
+- The NOVA navigation avatar acts as a small fictional beacon orbiting the Moon.
 - The ISS asset follows a circular path around Earth inclined 51.6 degrees, matching NASA's documented ISS orbital inclination.
 - The three generic satellite assets use distinct fictional Earth-orbit planes so they do not overlap.
 - Asteroids follow low-eccentricity heliocentric paths in the game's compressed belt region.
 - Comets follow larger, inclined, high-eccentricity ellipses with the Sun at one focus. Their motion solves Kepler's equation so they move more quickly near perihelion.
 
-Rendered orbital radii and elapsed time remain artistic gameplay values, not physical distances or real-time periods. The ISS inclination reference is [NASA's International Space Station overview](https://www.nasa.gov/reference/international-space-station/).
+Formation offsets preserve the authored installations while their shared centers move, and their encounter lighting travels with them. Rendered orbital radii and elapsed time remain artistic gameplay values, not physical distances or real-time periods. The ISS inclination reference is [NASA's International Space Station overview](https://www.nasa.gov/reference/international-space-station/).
 
 ## Solar System models
 

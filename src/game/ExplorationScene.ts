@@ -97,7 +97,17 @@ export class ExplorationScene {
         definition.position[1],
         definition.position[2],
       );
-      this.scene.add(light);
+      const anchor = definition.anchorPropId
+        ? this.#worldProps.find(
+            (worldProp) => worldProp.definition.id === definition.anchorPropId,
+          )
+        : undefined;
+      if (definition.anchorPropId && !anchor) {
+        throw new Error(
+          `World light anchor ${definition.anchorPropId} does not exist.`,
+        );
+      }
+      (anchor?.object ?? this.scene).add(light);
     }
 
     this.camera = new ChaseCamera(aspect);

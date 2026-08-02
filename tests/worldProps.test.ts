@@ -6,6 +6,7 @@ import { celestialBodies } from '../src/content/celestial-bodies';
 import {
   type WorldPropDefinition,
   worldProps,
+  worldRegionLights,
 } from '../src/content/world-props';
 
 describe('world prop manifest', () => {
@@ -40,13 +41,13 @@ describe('world prop manifest', () => {
     expect(positions.size).toBe(worldProps.length);
   });
 
-  it('gives space-native moving assets valid orbital relationships', () => {
+  it('gives every authored asset a valid orbital relationship', () => {
     const targetIds = new Set(celestialBodies.map((body) => body.id));
     const orbitingProps = definitions.filter(
       (definition) => definition.orbit !== undefined,
     );
 
-    expect(orbitingProps).toHaveLength(12);
+    expect(orbitingProps).toHaveLength(worldProps.length);
     for (const definition of orbitingProps) {
       const orbit = definition.orbit;
       expect(orbit && targetIds.has(orbit.targetId)).toBe(true);
@@ -54,6 +55,15 @@ describe('world prop manifest', () => {
       expect(orbit?.eccentricity).toBeGreaterThanOrEqual(0);
       expect(orbit?.eccentricity).toBeLessThan(1);
       expect(orbit?.meanMotionRadiansPerSecond).toBeGreaterThan(0);
+    }
+    expect(new Set(orbitingProps.map((definition) => definition.orbit?.targetId))).toEqual(
+      new Set(['earth', 'mars', 'moon', 'saturn', 'sun']),
+    );
+
+    for (const definition of definitions.filter((candidate) =>
+      ['engineering', 'ecosystem', 'memory-core'].includes(candidate.region),
+    )) {
+      expect(definition.orbit?.formationOffset).toBeDefined();
     }
 
     const iss = definitions.find(
@@ -78,6 +88,15 @@ describe('world prop manifest', () => {
       /^(asteroid|comet)-/.test(prop.id),
     )) {
       expect(definition.orbit?.targetId).toBe('sun');
+    }
+  });
+
+  it('anchors encounter lighting to moving authored assets', () => {
+    const propIds = new Set(definitions.map((definition) => definition.id));
+
+    for (const light of worldRegionLights) {
+      expect(light.anchorPropId).toBeDefined();
+      expect(propIds.has(light.anchorPropId ?? '')).toBe(true);
     }
   });
 });

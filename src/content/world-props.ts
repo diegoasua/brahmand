@@ -16,16 +16,7 @@ export interface WorldPropDefinition {
   displayPosition: readonly [number, number, number];
   displayRotation: readonly [number, number, number];
   rotationRadiansPerSecond?: readonly [number, number, number];
-  orbit?: {
-    targetId: CelestialBodyId;
-    semiMajorAxis: number;
-    eccentricity: number;
-    inclinationDegrees: number;
-    ascendingNodeDegrees: number;
-    meanAnomalyRadians: number;
-    /** Compressed gameplay motion, not a real-time orbital period. */
-    meanMotionRadiansPerSecond: number;
-  };
+  orbit?: WorldOrbitDefinition;
   bob?: {
     amplitude: number;
     radiansPerSecond: number;
@@ -39,11 +30,30 @@ export interface WorldPropDefinition {
   };
 }
 
+export interface WorldOrbitDefinition {
+  targetId: CelestialBodyId;
+  semiMajorAxis: number;
+  eccentricity: number;
+  inclinationDegrees: number;
+  ascendingNodeDegrees: number;
+  meanAnomalyRadians: number;
+  /** Compressed gameplay motion, not a real-time orbital period. */
+  meanMotionRadiansPerSecond: number;
+  /** Keeps authored installations assembled while their shared center orbits. */
+  formationOffset?: readonly [number, number, number];
+}
+
 export interface WorldRegionLightDefinition {
   color: number;
   intensity: number;
   distance: number;
   position: readonly [number, number, number];
+  anchorPropId?: string;
+}
+
+interface OrbitalFormation {
+  origin: readonly [number, number, number];
+  orbit: Omit<WorldOrbitDefinition, 'formationOffset'>;
 }
 
 const generatedMaterial = {
@@ -65,9 +75,58 @@ function model(
   };
 }
 
+const orbitalFormations = {
+  engineering: {
+    origin: [-81, 5, -63],
+    orbit: {
+      targetId: 'earth',
+      semiMajorAxis: 106,
+      eccentricity: 0.02,
+      inclinationDegrees: 7,
+      ascendingNodeDegrees: 0,
+      meanAnomalyRadians: 3.8,
+      meanMotionRadiansPerSecond: 0.006,
+    },
+  },
+  ecosystem: {
+    origin: [510, 0, -425],
+    orbit: {
+      targetId: 'mars',
+      semiMajorAxis: 145,
+      eccentricity: 0.04,
+      inclinationDegrees: 18,
+      ascendingNodeDegrees: 65,
+      meanAnomalyRadians: 0.35,
+      meanMotionRadiansPerSecond: 0.004,
+    },
+  },
+  'memory-core': {
+    origin: [1535, 88, -1130],
+    orbit: {
+      targetId: 'saturn',
+      semiMajorAxis: 240,
+      eccentricity: 0.06,
+      inclinationDegrees: 25,
+      ascendingNodeDegrees: 115,
+      meanAnomalyRadians: 1.1,
+      meanMotionRadiansPerSecond: 0.0024,
+    },
+  },
+} as const satisfies Record<string, OrbitalFormation>;
+
+const novaLunarOrbit = {
+  targetId: 'moon',
+  semiMajorAxis: 24,
+  eccentricity: 0.03,
+  inclinationDegrees: 35,
+  ascendingNodeDegrees: 210,
+  meanAnomalyRadians: 2.6,
+  meanMotionRadiansPerSecond: 0.018,
+} as const satisfies WorldOrbitDefinition;
+
 // These placements are artistic game units. Fictional infrastructure is kept in
 // clearly separated encounter clusters and is not meant to imply real orbital scale.
-export const worldProps = [
+const authoredWorldProps: readonly WorldPropDefinition[] = [
   // Chapter 1: an exposed 2147 orbital engineering corridor near Earth.
   {
     id: 'engineering-floor-tile',
@@ -638,31 +697,65 @@ export const worldProps = [
     displayRotation: [0, 20, 0],
     rotationRadiansPerSecond: [0, 0.02, 0],
   },
-] as const satisfies readonly WorldPropDefinition[];
+];
+
+export const worldProps: readonly WorldPropDefinition[] = authoredWorldProps.map(
+  (definition) => ({
+    ...definition,
+    orbit: definition.orbit ?? assignedOrbit(definition),
+  }),
+);
+
+function assignedOrbit(definition: WorldPropDefinition): WorldOrbitDefinition {
+  if (definition.id === 'character-nova') {
+    return novaLunarOrbit;
+  }
+
+  const formation =
+    definition.region === 'engineering' ||
+    definition.region === 'ecosystem' ||
+    definition.region === 'memory-core'
+      ? orbitalFormations[definition.region]
+      : undefined;
+  if (!formation) {
+    throw new Error(`World prop ${definition.id} needs an orbital assignment.`);
+  }
+
+  const formationOffset: readonly [number, number, number] = [
+    definition.displayPosition[0] - formation.origin[0],
+    definition.displayPosition[1] - formation.origin[1],
+    definition.displayPosition[2] - formation.origin[2],
+  ];
+  return { ...formation.orbit, formationOffset };
+}
 
 export const worldRegionLights = [
   {
     color: 0x55dff6,
     intensity: 3.2,
     distance: 170,
-    position: [-80, 25, -60],
+    position: [0, 21, 12],
+    anchorPropId: 'engineering-floor-tile',
   },
   {
     color: 0x69f2c2,
     intensity: 3,
     distance: 180,
-    position: [510, 22, -425],
+    position: [0, 22, -5],
+    anchorPropId: 'ecosystem-pylon',
   },
   {
     color: 0xffc45d,
     intensity: 4,
     distance: 210,
-    position: [1535, 125, -1130],
+    position: [0, 37, 0],
+    anchorPropId: 'memory-core',
   },
   {
     color: 0xb8e8ff,
     intensity: 2.2,
     distance: 150,
-    position: [45, 42, -45],
+    position: [-1, 10, 17],
+    anchorPropId: 'earth-orbit-iss',
   },
 ] as const satisfies readonly WorldRegionLightDefinition[];
