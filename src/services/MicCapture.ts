@@ -21,20 +21,31 @@ export class MicCapture {
       audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
     });
 
-    const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
-    await audioContext.audioWorklet.addModule(WORKLET_URL);
+    let audioContext: AudioContext | undefined;
+    try {
+      audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+      await audioContext.audioWorklet.addModule(WORKLET_URL);
 
-    const sourceNode = audioContext.createMediaStreamSource(stream);
-    const workletNode = new AudioWorkletNode(audioContext, WORKLET_NAME);
-    workletNode.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
-      this.callbacks.onChunk(encodeBase64Pcm16(new Int16Array(event.data)));
-    };
-    sourceNode.connect(workletNode);
+      const sourceNode = audioContext.createMediaStreamSource(stream);
+      const workletNode = new AudioWorkletNode(audioContext, WORKLET_NAME);
+      workletNode.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        this.callbacks.onChunk(encodeBase64Pcm16(new Int16Array(event.data)));
+      };
+      sourceNode.connect(workletNode);
 
-    this.#stream = stream;
-    this.#audioContext = audioContext;
-    this.#sourceNode = sourceNode;
-    this.#workletNode = workletNode;
+      this.#stream = stream;
+      this.#audioContext = audioContext;
+      this.#sourceNode = sourceNode;
+      this.#workletNode = workletNode;
+    } catch (error) {
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+      if (audioContext) {
+        void audioContext.close();
+      }
+      throw error;
+    }
   }
 
   stop(): void {

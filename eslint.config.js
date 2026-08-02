@@ -4,9 +4,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    // public/audio/pcm-capture-processor.js is a plain static browser asset
-    // (AudioWorkletGlobalScope, not the Vite/TS project) — see Task 5 brief.
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'public/**'],
+    ignores: ['dist/**', 'coverage/**', 'node_modules/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -22,6 +20,23 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+    },
+  },
+  {
+    // public/audio/pcm-capture-processor.js runs in AudioWorkletGlobalScope, a
+    // separate global scope (reachable only inside an AudioWorklet) that isn't
+    // part of globals.browser/globals.node and isn't a TS project file — see
+    // Task 5 brief. Declare just the worklet-specific globals it needs instead
+    // of ignoring the whole public/ directory.
+    files: ['public/audio/**/*.js'],
+    languageOptions: {
+      globals: {
+        AudioWorkletProcessor: 'readonly',
+        registerProcessor: 'readonly',
+        sampleRate: 'readonly',
+        currentFrame: 'readonly',
+        currentTime: 'readonly',
+      },
     },
   },
 );
