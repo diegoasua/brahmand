@@ -31,6 +31,10 @@ export function attachVoiceChatServer(
   });
 
   wss.on('connection', (client: WebSocket) => {
+    client.on('error', (error) => {
+      console.error('Voice chat client socket error:', error);
+    });
+
     if (!options.apiKey) {
       client.close(1011, 'Voice chat is not configured.');
       return;
