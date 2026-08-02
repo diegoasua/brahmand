@@ -93,4 +93,44 @@ describe('RealtimeVoiceRelay', () => {
 
     expect(upstream.closed).toBe(true);
   });
+
+  it('strips session.updated down to just {type} before forwarding to the client', () => {
+    const client = new FakeSocket();
+    const upstream = new FakeSocket();
+    new RealtimeVoiceRelay(client, upstream, config);
+
+    upstream.emitMessage(
+      JSON.stringify({
+        type: 'session.updated',
+        session: { instructions: 'SECRET SYSTEM PROMPT', model: 'some-model' },
+      }),
+    );
+
+    expect(client.sent).toEqual([JSON.stringify({ type: 'session.updated' })]);
+    const parsed = JSON.parse(client.sent[0]!) as Record<string, unknown>;
+    expect(Object.keys(parsed)).toEqual(['type']);
+    expect(JSON.stringify(parsed)).not.toContain('instructions');
+    expect(JSON.stringify(parsed)).not.toContain('model');
+    expect(JSON.stringify(parsed)).not.toContain('SECRET SYSTEM PROMPT');
+  });
+
+  it('drops a malformed (non-JSON) message from upstream without throwing or forwarding it', () => {
+    const client = new FakeSocket();
+    const upstream = new FakeSocket();
+    new RealtimeVoiceRelay(client, upstream, config);
+
+    expect(() => upstream.emitMessage('not valid json{')).not.toThrow();
+    expect(client.sent).not.toContain('not valid json{');
+    expect(client.sent).toHaveLength(0);
+  });
+
+  it('drops a malformed (non-JSON) message from the client without throwing or forwarding it upstream', () => {
+    const client = new FakeSocket();
+    const upstream = new FakeSocket();
+    new RealtimeVoiceRelay(client, upstream, config);
+
+    expect(() => client.emitMessage('not valid json{')).not.toThrow();
+    expect(upstream.sent).not.toContain('not valid json{');
+    expect(upstream.sent).toHaveLength(0);
+  });
 });
