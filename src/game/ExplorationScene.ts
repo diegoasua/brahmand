@@ -11,6 +11,7 @@ import { celestialBodies } from '../content/celestial-bodies';
 import { worldProps, worldRegionLights } from '../content/world-props';
 import { CelestialObject } from './CelestialObject';
 import { ChaseCamera } from './ChaseCamera';
+import { resolveSphereCollision } from './collision';
 import { createStarField } from './createStarField';
 import { InputController } from './InputController';
 import { PlayerShip } from './PlayerShip';
@@ -32,6 +33,7 @@ export interface ExplorationUpdate {
 
 export class ExplorationScene {
   static readonly #WORLD_PROP_LOAD_DISTANCE = 700;
+  static readonly #SHIP_COLLISION_RADIUS = 1.5;
 
   readonly scene = new Scene();
   readonly input = new InputController();
@@ -86,6 +88,17 @@ export class ExplorationScene {
 
   update(deltaSeconds: number): ExplorationUpdate {
     this.ship.update(deltaSeconds, this.input);
+
+    for (const celestialObject of this.#celestialObjects) {
+      resolveSphereCollision(
+        this.ship.object.position,
+        this.ship.velocity,
+        ExplorationScene.#SHIP_COLLISION_RADIUS,
+        celestialObject.object.position,
+        celestialObject.definition.displayRadius,
+      );
+    }
+
     this.camera.update(deltaSeconds, this.ship);
 
     for (const celestialObject of this.#celestialObjects) {
