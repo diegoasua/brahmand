@@ -81,6 +81,9 @@ export class Game {
     const contact = update.nearestContact;
 
     this.#hud.updateTelemetry(update.speed, contact);
+    if (update.impactName) {
+      this.#hud.setNotice(`Collision avoidance engaged near ${update.impactName}.`);
+    }
     this.#advanceVisitQuest();
 
     if (

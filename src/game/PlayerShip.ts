@@ -17,6 +17,7 @@ const FORWARD = new Vector3(0, 0, -1);
 export class PlayerShip {
   readonly object = new Group();
   readonly velocity = new Vector3();
+  readonly collisionRadius = modelAssets.asteria.targetSize / 2;
 
   readonly #placeholder = new Group();
   readonly #thrustGlow = new Group();

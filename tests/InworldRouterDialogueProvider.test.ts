@@ -43,6 +43,7 @@ describe('InworldRouterDialogueProvider', () => {
       messages: Array<{ content: string }>;
     };
     expect(body.model).toBe('deepinfra/deepseek-ai/DeepSeek-V4-Flash');
+    expect(body.messages[0]?.content).toContain('complete closed book');
     expect(body.messages[1]?.content).toContain("Earth's dry atmosphere");
   });
 
@@ -97,5 +98,9 @@ describe('InworldRouterDialogueProvider', () => {
     expect(body.messages[1]?.content).toContain('Interaction mode: conversation');
     expect(body.messages[1]?.content).toContain('PLAYER: What is this station?');
     expect(body.messages[1]?.content).toContain('51.6 degrees');
+    expect(body.messages[0]?.content).toContain(
+      'well-established, broadly accepted scientific knowledge',
+    );
+    expect(body.messages[0]?.content).not.toContain('complete closed book');
   });
 });

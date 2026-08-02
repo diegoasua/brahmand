@@ -1,4 +1,4 @@
-import { Group, MathUtils, Vector3 } from 'three';
+import { Box3, Group, MathUtils, Vector3 } from 'three';
 import type { WorldPropDefinition } from '../content/world-props';
 import { loadModelAsset } from './loadModelAsset';
 
@@ -7,6 +7,7 @@ export class WorldProp {
   readonly #baseY: number;
   readonly #orbitMajorAxis = new Vector3(1, 0, 0);
   readonly #orbitMinorAxis = new Vector3(0, 0, 1);
+  #localCollisionBounds: Box3 | undefined;
   #elapsedSeconds = 0;
   #meanAnomaly = 0;
   #loadPromise: Promise<boolean> | undefined;
@@ -89,9 +90,23 @@ export class WorldProp {
     return this.#loadPromise;
   }
 
+  copyWorldCollisionBounds(target: Box3): boolean {
+    if (!this.#localCollisionBounds) {
+      return false;
+    }
+
+    this.object.updateWorldMatrix(true, false);
+    target
+      .copy(this.#localCollisionBounds)
+      .applyMatrix4(this.object.matrixWorld);
+    return !target.isEmpty();
+  }
+
   async #loadVisual(): Promise<boolean> {
     try {
       const visual = await loadModelAsset(this.definition.model);
+      visual.updateMatrixWorld(true);
+      this.#localCollisionBounds = new Box3().setFromObject(visual);
       this.object.add(visual);
       return true;
     } catch (error) {

@@ -34,6 +34,7 @@ export const celestialBodies = [
         'earth-atmosphere-composition',
         'earth-surface-water',
         'earth-magnetosphere',
+        'earth-blue-sky-rayleigh-scattering',
       ],
     },
   },

@@ -32,7 +32,7 @@ When an Inworld key is configured, the API's dialogue provider sends grounded co
 
 Dialogue requests carry bounded arrival and quick-fact intents. The browser remembers science-entry IDs already used for each target during the current play session, and quick-fact requests exclude those entries until the target's pool is exhausted.
 
-Pressing `C` creates a target-specific Inworld Realtime API session over WebRTC. The browser sends microphone audio as a native WebRTC track; Inworld STT and semantic voice activity detection establish turns, DeepSeek answers within a server-built closed-book science prompt, and Inworld TTS-2 returns the cloned AURA voice as a remote audio track. Transcripts remain visible for accessibility, but there is no text-entry interaction. After session setup the microphone track remains active, matching Inworld's continuous WebRTC flow; browser echo cancellation and server turn detection prevent AURA's output from becoming a new player turn.
+Pressing `C` creates a target-specific Inworld Realtime API session over WebRTC. The browser sends microphone audio as a native WebRTC track; Inworld STT and semantic voice activity detection establish turns, DeepSeek answers with reviewed target facts as preferred anchors plus a guarded well-established-science policy, and Inworld TTS-2 returns the cloned AURA voice as a remote audio track. Transcripts remain visible for accessibility, but there is no text-entry interaction. After session setup the microphone track remains active, matching Inworld's continuous WebRTC flow; browser echo cancellation and server turn detection prevent AURA's output from becoming a new player turn.
 
 ## Trust boundaries
 
@@ -40,7 +40,7 @@ Pressing `C` creates a target-specific Inworld Realtime API session over WebRTC.
 - ICE and SDP exchange requests are authenticated by the Node gateway; the key is never returned in realtime configuration.
 - The API validates request size and shape before calling paid services.
 - The client decides presentation; the server decides which knowledge an NPC may use.
-- Realtime conversation history is context, not scientific authority. The session instructions restrict scientific claims to the server-supplied approved fact set.
+- Realtime conversation history is context, not scientific authority. The session prefers server-supplied reviewed anchors, permits broadly accepted science for open questions, and requires uncertainty to be stated rather than replaced with fabricated specifics.
 - Model text must eventually pass citation/claim checks before it can affect quest state.
 - Narrative text is generated on demand, while quest completion remains deterministic and cannot be changed by the model.
 - TTS failure is non-fatal. On-screen dialogue remains the accessible source of truth.

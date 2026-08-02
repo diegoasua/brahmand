@@ -154,6 +154,17 @@ export const knowledgeEntries = [
     reviewedOn: '2026-08-01',
   },
   {
+    id: 'earth-blue-sky-rayleigh-scattering',
+    title: "Why Earth's sky looks blue",
+    summary:
+      "Earth's daytime sky usually looks blue because molecules in the atmosphere scatter shorter-wavelength blue light more strongly than longer-wavelength colors, a process called Rayleigh scattering.",
+    source: {
+      label: 'NASA Space Place — Why Is the Sky Blue?',
+      url: 'https://spaceplace.nasa.gov/blue-sky/en/',
+    },
+    reviewedOn: '2026-08-01',
+  },
+  {
     id: 'moon-surface-gravity',
     title: "The Moon's surface gravity",
     summary:

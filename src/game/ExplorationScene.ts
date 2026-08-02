@@ -1,5 +1,6 @@
 import {
   AmbientLight,
+  Box3,
   Color,
   DirectionalLight,
   HemisphereLight,
@@ -14,6 +15,10 @@ import { ChaseCamera } from './ChaseCamera';
 import { createStarField } from './createStarField';
 import { InputController } from './InputController';
 import { PlayerShip } from './PlayerShip';
+import {
+  resolveSolidCollisions,
+  type SolidCollider,
+} from './resolveSolidCollisions';
 import { WorldProp } from './WorldProp';
 
 export interface NearbyContact {
@@ -30,6 +35,7 @@ export interface ExplorationUpdate {
   interactionRequested: boolean;
   conversationRequested: boolean;
   conversationCloseRequested: boolean;
+  impactName: string | undefined;
 }
 
 export class ExplorationScene {
@@ -43,7 +49,10 @@ export class ExplorationScene {
   readonly #celestialById: ReadonlyMap<string, CelestialObject>;
   readonly #worldProps: WorldProp[];
   readonly #distanceVector = new Vector3();
+  readonly #previousShipPosition = new Vector3();
+  readonly #worldCollisionBounds = new Box3();
   readonly #contactsInRange = new Set<string>();
+  #activeCollisionId: string | undefined;
 
   constructor(aspect: number) {
     this.scene.background = new Color(0x01040b);
@@ -96,8 +105,8 @@ export class ExplorationScene {
   }
 
   update(deltaSeconds: number): ExplorationUpdate {
+    this.#previousShipPosition.copy(this.ship.object.position);
     this.ship.update(deltaSeconds, this.input);
-    this.camera.update(deltaSeconds, this.ship);
 
     for (const celestialObject of this.#celestialObjects) {
       celestialObject.update(deltaSeconds);
@@ -117,6 +126,8 @@ export class ExplorationScene {
       }
     }
 
+    const impactName = this.#resolveShipCollisions();
+    this.camera.update(deltaSeconds, this.ship);
     const { nearestContact, enteredContactId } = this.#updateContacts();
 
     return {
@@ -126,6 +137,7 @@ export class ExplorationScene {
       interactionRequested: this.input.consumePress('KeyF'),
       conversationRequested: this.input.consumePress('KeyC'),
       conversationCloseRequested: this.input.consumePress('Escape'),
+      impactName,
     };
   }
 
@@ -253,5 +265,41 @@ export class ExplorationScene {
       nearestContact: nearest,
       enteredContactId: entered?.id,
     };
+  }
+
+  #resolveShipCollisions(): string | undefined {
+    const colliders: SolidCollider[] = this.#celestialObjects.map((object) => ({
+      id: object.definition.id,
+      name: object.definition.name,
+      kind: 'sphere',
+      center: object.object.position,
+      radius: object.definition.displayRadius,
+    }));
+
+    for (const worldProp of this.#worldProps) {
+      if (!worldProp.copyWorldCollisionBounds(this.#worldCollisionBounds)) {
+        continue;
+      }
+      colliders.push({
+        id: worldProp.definition.id,
+        name: worldProp.definition.name,
+        kind: 'box',
+        bounds: this.#worldCollisionBounds.clone(),
+      });
+    }
+
+    const collision = resolveSolidCollisions(
+      this.#previousShipPosition,
+      this.ship.object.position,
+      this.ship.velocity,
+      this.ship.collisionRadius,
+      colliders,
+    );
+    const impactName =
+      collision && collision.id !== this.#activeCollisionId
+        ? collision.name
+        : undefined;
+    this.#activeCollisionId = collision?.id;
+    return impactName;
   }
 }

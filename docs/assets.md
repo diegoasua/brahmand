@@ -65,6 +65,10 @@ All 50 delivered Chapter 1–6 GLBs are mapped in `src/content/world-props.ts`. 
 
 Nearby props load before they are readily visible. Distant clusters stream when the ship comes within 700 artistic units; unlike celestial fallbacks, unloaded props have no placeholder geometry, so they never appear as generic spheres.
 
+### Solid flight geometry
+
+Celestial bodies use swept spherical collision hulls based on their rendered radius. Authored GLB props become solid as soon as their visual loads: the loader-derived local bounds follow each prop's position, rotation, bobbing, or orbit. Asteria also has a hull radius, and collision checks sweep from its previous to current position so boost-speed movement cannot tunnel through small assets. An impact moves the ship back outside the surface and removes inward velocity while leaving the flight orientation under player control.
+
 ### Orbital relationships
 
 Space-native props carry explicit orbital definitions instead of merely being placed near a world:

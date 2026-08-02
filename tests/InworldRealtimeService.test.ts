@@ -33,7 +33,7 @@ describe('InworldRealtimeService', () => {
     const config = await service.configure('earth');
 
     expect(config.iceServers).toHaveLength(1);
-    expect(config.grounding).toHaveLength(3);
+    expect(config.grounding).toHaveLength(4);
     expect(config.session).toMatchObject({
       model: serviceOptions.model,
       output_modalities: ['audio', 'text'],
@@ -48,6 +48,11 @@ describe('InworldRealtimeService', () => {
       },
     });
     expect(config.session.instructions).toContain('78% nitrogen');
+    expect(config.session.instructions).toContain('Rayleigh scattering');
+    expect(config.session.instructions).toContain(
+      'well-established, broadly accepted scientific knowledge',
+    );
+    expect(config.session.instructions).not.toContain('complete closed book');
     expect(JSON.stringify(config)).not.toContain(serviceOptions.apiKey);
     expect(fetchImplementation).toHaveBeenCalledWith(
       'https://api.inworld.ai/v1/realtime/ice-servers',

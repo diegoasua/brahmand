@@ -25,7 +25,7 @@ Every educational encounter separates three kinds of information:
 2. **Engineering scenario**: invented constraints that make a mission solvable, such as a connector size or available repair cartridge.
 3. **Story fiction**: characters, future infrastructure, the memory failure, and the larger mystery.
 
-An LLM may rephrase approved material and respond conversationally. It may not decide scientific truth, invent a fact needed to complete a quest, or silently turn story fiction into a scientific claim. Quest correctness remains deterministic.
+An LLM may rephrase approved material and use well-established general science to answer open-ended conversation. It may not invent a fact needed to complete a quest, present uncertainty as settled science, or silently turn story fiction into a scientific claim. Reviewed entries remain the source of quick facts, and quest correctness remains deterministic.
 
 Incorrect answers should reveal a useful distinction. A player who selects a material that conducts electricity but does not satisfy the mission's engineering constraints has demonstrated partial understanding and should be told so.
 

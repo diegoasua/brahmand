@@ -38,7 +38,7 @@ describe('CuratedDialogueProvider', () => {
     const provider = new CuratedDialogueProvider(() => 0);
     const seenKnowledgeIds: string[] = [];
 
-    for (let index = 0; index < 3; index += 1) {
+    for (let index = 0; index < 4; index += 1) {
       const response = await provider.generate({
         targetId: 'earth',
         intent: 'fact',
@@ -54,6 +54,7 @@ describe('CuratedDialogueProvider', () => {
         'earth-atmosphere-composition',
         'earth-surface-water',
         'earth-magnetosphere',
+        'earth-blue-sky-rayleigh-scattering',
       ]),
     );
 

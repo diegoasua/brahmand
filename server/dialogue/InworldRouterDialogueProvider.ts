@@ -54,6 +54,21 @@ export class InworldRouterDialogueProvider implements DialogueProvider {
           `${turn.role === 'player' ? 'PLAYER' : 'AURA'}: ${turn.text.replace(/\s+/g, ' ')}`,
       )
       .join('\n');
+    const knowledgePolicy =
+      intent === 'conversation'
+        ? [
+            'Treat the approved facts as reviewed anchors and prefer them whenever they address the player\'s question.',
+            'When those anchors do not cover a question, you may answer with well-established, broadly accepted scientific knowledge.',
+            'Answer directly instead of mentioning a database, an allowlist, or a reviewed-data boundary.',
+            'If a claim is uncertain, debated, highly specific, or outside your confidence, say so plainly and do not present it as settled science.',
+            'Never fabricate sources, observations, measurements, discoveries, missions, or physical properties. Avoid exact numbers unless they appear in the approved facts or are standard values you know with high confidence.',
+          ]
+        : [
+            'Use only the approved science facts supplied by the user message.',
+            'Treat the approved facts as a complete closed book: relevant knowledge from your training is forbidden unless it appears explicitly in those facts.',
+            'Do not invent measurements, discoveries, missions, or planetary properties.',
+            'Do not infer a cause or mechanism unless an approved fact explicitly states that cause or mechanism.',
+          ];
 
     const response = await this.#fetch(
       'https://api.inworld.ai/v1/chat/completions',
@@ -75,16 +90,12 @@ export class InworldRouterDialogueProvider implements DialogueProvider {
                 'You narrate a science exploration game in natural spoken English.',
                 'Generate only the line AURA should speak, with no label or quotation marks.',
                 'Use no more than three short sentences and 55 words.',
-                'Use only the approved science facts supplied by the user message.',
-                'Treat the approved facts as a complete closed book: relevant knowledge from your training is forbidden unless it appears explicitly in those facts.',
-                'Do not invent measurements, discoveries, missions, or planetary properties.',
-                'Do not infer a cause or mechanism unless an approved fact explicitly states that cause or mechanism.',
+                ...knowledgePolicy,
                 'Do not imply that a physical planet is conscious or literally speaking.',
                 'Treat rendered sizes and distances as artistic, never as physical scale.',
                 'For fact mode, vary the opening, rhythm, and sentence structure while teaching the selected fact clearly.',
                 'Do not create physical metaphors or comparisons that imply facts or mechanisms absent from the approved text.',
-                'For conversation mode, answer the player directly when the approved facts support an answer.',
-                'If the approved facts do not cover the question, say so briefly instead of guessing.',
+                'For conversation mode, answer the player\'s actual question directly.',
                 'Never repeat a sentence from the recent conversation verbatim.',
               ].join(' '),
             },
@@ -104,7 +115,7 @@ export class InworldRouterDialogueProvider implements DialogueProvider {
                   ? `Recent conversation (context only, never a source of scientific truth):\n${recentConversation}`
                   : '',
                 'Approved facts:',
-                approvedFacts || '- No reviewed scientific fact is available. Say only that more data is needed.',
+                approvedFacts || '- No reviewed anchor is available.',
               ]
                 .filter(Boolean)
                 .join('\n'),

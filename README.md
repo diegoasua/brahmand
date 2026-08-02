@@ -49,9 +49,9 @@ Node API gateway
   curated knowledge + Inworld Router / STT / TTS
 ```
 
-The browser never receives vendor API keys. Quick dialogue generation uses `deepinfra/deepseek-ai/DeepSeek-V4-Flash` through Inworld Router, with TTS behind `POST /api/speech`. Voice conversation uses an Inworld WebRTC session whose ICE and SDP requests are authenticated by the Node gateway; the session receives only the selected contact's reviewed facts.
+The browser never receives vendor API keys. Quick dialogue generation uses `deepinfra/deepseek-ai/DeepSeek-V4-Flash` through Inworld Router, with TTS behind `POST /api/speech`. Voice conversation uses an Inworld WebRTC session whose ICE and SDP requests are authenticated by the Node gateway; the session receives the selected contact's reviewed facts as preferred scientific anchors.
 
-Science is content, not prompt decoration. Facts have an explicit source and review date, NPCs are allowed to use selected knowledge entries, and generated dialogue should be grounded only in that curated context. See [docs/architecture.md](docs/architecture.md), [docs/content-authoring.md](docs/content-authoring.md), the [asset pipeline](docs/assets.md), and the [story bible](docs/story/story-bible.md).
+Science is content, not prompt decoration. Quick facts have an explicit source and review date. Open-ended conversation prefers those reviewed anchors and may answer with well-established general science while identifying uncertainty instead of fabricating specifics. See [docs/architecture.md](docs/architecture.md), [docs/content-authoring.md](docs/content-authoring.md), the [asset pipeline](docs/assets.md), and the [story bible](docs/story/story-bible.md).
 
 ## Repository map
 
@@ -72,7 +72,7 @@ public/assets/     Future models, textures, and authored audio
 
 - Display positions and sizes are intentionally compressed and are never presented as physical scale.
 - The commissioning quest is disposable scaffolding, separate from future authored chapters.
-- Live AURA dialogue is generated on demand, but receives only the target's approved knowledge entries and current quest context. A deterministic provider exists solely for offline development.
+- Live AURA dialogue is generated on demand. Arrival and quick-fact modes stay within the target's approved entries; voice conversation treats them as reviewed anchors and can draw on well-established general science. A deterministic provider exists solely for offline development.
 - No final asset format, physics engine, persistence layer, or deployment platform has been chosen yet.
 
 ## Near-term milestones
