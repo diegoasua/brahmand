@@ -24,6 +24,7 @@
     "@inworld/tts": "^1.1.1",
     "express": "^5.2.1",
     "three": "^0.185.1",
+    "ws": "^8.21.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -31,6 +32,7 @@
     "@types/express": "latest",
     "@types/node": "latest",
     "@types/three": "latest",
+    "@types/ws": "^8.18.1",
     "concurrently": "latest",
     "eslint": "^10.0.0",
     "globals": "latest",

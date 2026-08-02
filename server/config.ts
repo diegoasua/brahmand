@@ -18,4 +18,7 @@ export const serverConfig = {
   inworldLlmModel:
     process.env.INWORLD_LLM_MODEL?.trim() ||
     'deepinfra/deepseek-ai/DeepSeek-V4-Flash',
+  inworldRealtimeModel:
+    process.env.INWORLD_REALTIME_MODEL?.trim() ||
+    'google-ai-studio/gemini-2.5-flash-lite',
 } as const;
