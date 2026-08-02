@@ -20,6 +20,7 @@ export interface VoiceChatCallbacks {
 
 export class VoiceChatController {
   #active = false;
+  #generation = 0;
   readonly #playback = new VoicePlaybackQueue();
   readonly #mic: MicCapture;
   readonly #client: RealtimeVoiceClient;
@@ -54,22 +55,33 @@ export class VoiceChatController {
       return;
     }
 
+    const generation = ++this.#generation;
     this.#active = true;
     this.callbacks.onOpen();
     this.callbacks.onStatusChange(STATUS_LABELS.connecting);
 
     try {
       await this.#mic.start();
+
+      if (generation !== this.#generation) {
+        // Superseded by stop() (or another toggle()) while awaiting mic permission.
+        this.#mic.stop();
+        return;
+      }
+
       this.#client.connect();
     } catch {
-      this.callbacks.onStatusChange('Microphone access is needed for voice chat.');
-      this.#active = false;
+      if (generation === this.#generation) {
+        this.callbacks.onStatusChange('Microphone access is needed for voice chat.');
+        this.#active = false;
+        this.callbacks.onClose();
+      }
       this.#mic.stop();
-      this.callbacks.onClose();
     }
   }
 
   stop(): void {
+    this.#generation += 1;
     this.#active = false;
     this.#mic.stop();
     this.#client.disconnect();
