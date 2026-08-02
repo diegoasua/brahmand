@@ -3,6 +3,7 @@ import { commissioningQuests } from '../content/commissioning-quests';
 import { QuestDirector } from '../domain/quest';
 import { DialogueController } from '../services/DialogueController';
 import { GameApiClient } from '../services/GameApiClient';
+import { VoiceChatController } from '../services/VoiceChatController';
 import { Hud } from '../ui/Hud';
 import { ExplorationScene } from './ExplorationScene';
 
@@ -12,6 +13,7 @@ export class Game {
   readonly #hud = new Hud();
   readonly #quests = new QuestDirector(commissioningQuests);
   readonly #dialogue: DialogueController;
+  readonly #voiceChat: VoiceChatController;
   readonly #clock = new Clock();
   readonly #introducedContactIds = new Set<string>();
   #animationFrame = 0;
@@ -31,6 +33,13 @@ export class Game {
     this.#dialogue = new DialogueController(api, {
       onDialogue: (response) => this.#hud.showDialogue(response),
       onNotice: (message) => this.#hud.setNotice(message),
+    });
+    this.#voiceChat = new VoiceChatController(import.meta.env.VITE_API_BASE_URL ?? '', {
+      onOpen: () => this.#hud.showVoiceChat(),
+      onClose: () => this.#hud.hideVoiceChat(),
+      onStatusChange: (text) => this.#hud.setVoiceChatStatus(text),
+      onTranscriptDelta: (speaker, text) => this.#hud.appendVoiceChatDelta(speaker, text),
+      onTurnComplete: (speaker) => this.#hud.completeVoiceChatTurn(speaker),
     });
 
     this.#hud.updateQuest(this.#quests.progress);
@@ -54,6 +63,7 @@ export class Game {
     window.removeEventListener('resize', this.#onResize);
     this.#world.dispose();
     this.#dialogue.dispose();
+    this.#voiceChat.dispose();
     this.#renderer.dispose();
   }
 
@@ -65,14 +75,20 @@ export class Game {
     this.#hud.updateTelemetry(update.speed, contact);
     this.#advanceVisitQuest();
 
-    if (
-      update.enteredContactId &&
-      !this.#introducedContactIds.has(update.enteredContactId)
-    ) {
-      this.#introducedContactIds.add(update.enteredContactId);
-      void this.#openChannel(update.enteredContactId);
-    } else if (update.interactionRequested && contact?.inRange) {
-      void this.#openChannel(contact.id);
+    if (this.#world.input.consumePress('KeyC')) {
+      void this.#voiceChat.toggle();
+    }
+
+    if (!this.#voiceChat.isActive) {
+      if (
+        update.enteredContactId &&
+        !this.#introducedContactIds.has(update.enteredContactId)
+      ) {
+        this.#introducedContactIds.add(update.enteredContactId);
+        void this.#openChannel(update.enteredContactId);
+      } else if (update.interactionRequested && contact?.inRange) {
+        void this.#openChannel(contact.id);
+      }
     }
 
     this.#renderer.render(this.#world.scene, this.#world.camera.camera);
