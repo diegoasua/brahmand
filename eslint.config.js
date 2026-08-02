@@ -4,7 +4,9 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**'],
+    // public/audio/pcm-capture-processor.js is a plain static browser asset
+    // (AudioWorkletGlobalScope, not the Vite/TS project) — see Task 5 brief.
+    ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'public/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
